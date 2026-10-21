@@ -1,0 +1,21 @@
+# Betriebssystem- und Editor-Reste
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+.AppleDouble
+.LSOverride
+*~
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Downloads und temporäre Dateien
+*.download
+*.tmp
+~$*

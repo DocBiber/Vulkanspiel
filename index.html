@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vulkanspiel — Physische Geografie LK</title>
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .layout { max-width: 1180px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  .kopf { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: baseline;
+          border-bottom: 1px solid #243b53; padding-bottom: .75rem; margin-bottom: 1.25rem; }
+  .kopf h1 { margin: 0; font-size: 1.5rem; }
+  .kopf .untertitel { color: #9db4cc; }
+  .bereich { background: #111f31; border: 1px solid #243b53; border-radius: 12px;
+             padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
+  .bereich > h2 { font-size: 1.1rem; color: #dbe6f2; margin-bottom: .75rem; }
+  .anmeldung { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  .gruppenliste { list-style: none; margin: .75rem 0 0; padding: 0; display: grid; gap: .4rem; }
+  .gruppenliste li { display: flex; gap: .75rem; align-items: center; background: #0f2036;
+                     border: 1px solid #243b53; border-radius: 8px; padding: .4rem .6rem; }
+  .gruppenliste li.aktiv { border-color: #7ee2a8; }
+  .gruppenliste .punktestand { color: #7ee2a8; font-weight: 600; }
+  .gruppenliste .fortschritt { color: #9db4cc; margin-left: auto; }
+  .station { border-top: 1px solid #243b53; padding: .85rem 0; }
+  .station.erledigt { background: #0f2418; border-radius: 8px; padding: .85rem; margin: .4rem 0; }
+  .lehrerblock, .codeblock { display: flex; flex-wrap: wrap; gap: .5rem .9rem; align-items: center;
+                              margin-top: .5rem; }
+  .lehrerblock { color: #a8c0d8; }
+  .lehrerhinweis { font-size: .9rem; color: #ffd28a; }
+  .code-anzeige { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+                  letter-spacing: .15em; color: #ffd28a; font-weight: 700; }
+  .code-anzeige.sichtbar { border-bottom: 2px solid #ffd28a; }
+  .codeToggle { background: #3a2c12; border-color: #6b5220; }
+  .codeToggle:hover { background: #4d3a17; }
+  .codeblock input { width: 5.5rem; letter-spacing: .15em; text-transform: uppercase; }
+  .fehler { font-size: .9rem; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid #243b53; }
+  th { color: #9db4cc; font-weight: 600; }
+  .exportaktionen { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .9rem; }
+  #csvVorschau { background: #0a1622; border: 1px solid #243b53; border-radius: 8px;
+                 padding: .75rem; overflow-x: auto; font-size: .85rem; }
+  #kartenStatus { color: #9db4cc; font-size: .9rem; margin-top: .5rem; }
+  .fuss { color: #7d9bbf; font-size: .85rem; margin-top: 1.5rem; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <header class="kopf">
+    <h1>Vulkanspiel</h1>
+    <span class="untertitel">Sammelspiel zur physischen Geografie · LK Geografie · 45 Minuten</span>
+  </header>
+
+  <section class="bereich" aria-labelledby="anmeldungTitel">
+    <h2 id="anmeldungTitel">1 · Gruppe anmelden</h2>
+    <form class="anmeldung" onsubmit="return false">
+      <input id="gruppenName" placeholder="Gruppenname" maxlength="24" autocomplete="off">
+      <button type="button" id="gruppenAnmeldenBtn">Anmelden (10 Startpunkte)</button>
+    </form>
+    <span class="fehler" id="anmeldungFehler"></span>
+    <div id="gruppenListe"></div>
+  </section>
+
+  <section class="bereich" aria-labelledby="kartenTitel">
+    <h2 id="kartenTitel">2 · Weltkarte der Vulkangebiete</h2>
+    <p class="hinweis">Kartenstuecke erscheinen, sobald eine Gruppe den passenden Kurzcode
+      eingibt. Der Code kommt von der Lehrkraft und wird nur nach Loesung der Station ausgegeben.</p>
+    <div id="karte">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520" role="img"
+           aria-label="Weltkarte der Vulkangebiete"
+           style="width:100%;height:auto;background:#0d1b2a;border-radius:12px">
+        <defs>
+          <linearGradient id="ozean" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#16324f"/>
+            <stop offset="100%" stop-color="#0d1b2a"/>
+          </linearGradient>
+        </defs>
+        <rect width="1000" height="520" fill="url(#ozean)"/>
+
+        <!-- Kontinente: stilisierte Umrissen, keine exakten Karten -->
+        <g fill="#243b53" stroke="#334e68" stroke-width="1.5" id="kontinente">
+          <path d="M120,90 C100,120 95,160 110,195 C125,230 130,260 150,275 C175,292 190,270 185,240 C180,210 195,185 215,175 C235,165 250,140 245,115 C240,90 215,75 185,72 C155,70 135,75 120,90 Z"/>
+          <path d="M175,300 C165,330 175,365 190,400 C205,435 220,470 235,490 C250,505 268,495 265,470 C262,445 250,420 245,390 C240,360 245,330 235,310 C225,292 190,290 175,300 Z"/>
+          <path d="M430,80 C410,95 405,120 415,145 C425,170 420,195 430,215 C440,235 435,255 450,270 C465,285 480,270 475,245 C470,220 485,200 500,190 C515,180 530,160 520,140 C510,120 490,110 470,105 C450,100 440,90 430,80 Z"/>
+          <path d="M470,230 C460,260 470,295 490,330 C510,365 525,400 545,430 C565,460 585,450 575,420 C565,390 550,360 545,330 C540,300 530,270 515,250 C500,232 480,222 470,230 Z"/>
+          <path d="M540,90 C525,110 520,140 535,165 C550,190 545,215 560,235 C575,255 595,245 590,220 C585,195 600,175 615,165 C630,155 645,135 635,115 C625,95 605,85 585,82 C565,80 550,82 540,90 Z"/>
+          <path d="M610,180 C600,205 610,235 630,260 C650,285 665,310 680,330 C695,350 715,340 705,315 C695,290 680,265 675,240 C670,215 660,190 645,178 C630,168 618,172 610,180 Z"/>
+          <path d="M700,120 C690,145 700,175 720,200 C740,225 755,250 770,270 C785,290 805,280 795,255 C785,230 770,205 765,180 C760,155 750,130 735,118 C720,108 708,112 700,120 Z"/>
+          <path d="M760,380 C750,400 760,425 780,445 C800,465 815,455 805,435 C795,415 785,395 775,382 C765,370 766,374 760,380 Z"/>
+          <path d="M800,250 C790,270 800,295 820,315 C840,335 855,325 845,305 C835,285 825,265 815,252 C805,240 806,244 800,250 Z"/>
+          <path d="M820,400 C815,415 825,435 840,450 C855,465 868,458 858,442 C848,426 840,410 832,400 C824,390 824,394 820,400 Z"/>
+        </g>
+
+        <!-- Gitterlinien: Breiten- und Laengengrade -->
+        <g stroke="#1b2a41" stroke-width="1">
+          <line x1="0" y1="130" x2="1000" y2="130"/>
+          <line x1="0" y1="260" x2="1000" y2="260"/>
+          <line x1="0" y1="390" x2="1000" y2="390"/>
+          <line x1="200" y1="0" x2="200" y2="520"/>
+          <line x1="400" y1="0" x2="400" y2="520"/>
+          <line x1="600" y1="0" x2="600" y2="520"/>
+          <line x1="800" y1="0" x2="800" y2="520"/>
+        </g>
+        <line x1="0" y1="260" x2="1000" y2="260" stroke="#4a6fa5" stroke-width="2" stroke-dasharray="6 4"/>
+        <text x="10" y="252" fill="#7d9bbf" font-size="13" font-family="system-ui, sans-serif">Äquator</text>
+
+        <!-- Kartenstuecke: standardmaessig verborgen -->
+        <g id="piece-subduktion" class="stueck" opacity="0">
+          <path d="M95,110 L130,95 L150,140 L135,185 L150,225 L140,260 L110,250 L95,200 L105,155 Z" fill="#c0392b" opacity="0.85"/>
+          <text x="118" y="180" fill="#fff" font-size="15" font-family="system-ui, sans-serif" font-weight="700">S</text>
+        </g>
+
+        <g id="piece-hotspot" class="stueck" opacity="0">
+          <circle cx="150" cy="330" r="30" fill="#e67e22" opacity="0.85"/>
+          <circle cx="190" cy="345" r="16" fill="#e67e22" opacity="0.7"/>
+          <circle cx="225" cy="360" r="9" fill="#e67e22" opacity="0.55"/>
+          <text x="140" y="336" fill="#fff" font-size="14" font-family="system-ui, sans-serif" font-weight="700">H</text>
+        </g>
+
+        <g id="piece-maar" class="stueck" opacity="0">
+          <circle cx="500" cy="150" r="26" fill="#8e44ad" opacity="0.85"/>
+          <circle cx="500" cy="150" r="15" fill="#0d1b2a" opacity="0.8"/>
+          <circle cx="540" cy="175" r="14" fill="#8e44ad" opacity="0.7"/>
+          <text x="492" y="155" fill="#fff" font-size="14" font-family="system-ui, sans-serif" font-weight="700">M</text>
+        </g>
+
+        <g id="piece-lip" class="stueck" opacity="0">
+          <path d="M640,290 L700,275 L735,315 L720,365 L665,380 L635,345 Z" fill="#16a085" opacity="0.85"/>
+          <text x="668" y="330" fill="#fff" font-size="14" font-family="system-ui, sans-serif" font-weight="700">L</text>
+        </g>
+
+        <g id="piece-risiko" class="stueck" opacity="0">
+          <path d="M640,300 L660,285 L675,310 L660,330 L640,320 Z" fill="#2c3e50" opacity="0.9" stroke="#ecf0f1" stroke-width="2"/>
+          <text x="640" y="352" fill="#ecf0f1" font-size="13" font-family="system-ui, sans-serif" font-weight="700">R</text>
+        </g>
+
+        <!-- Legende -->
+        <g font-family="system-ui, sans-serif" font-size="12" fill="#a8c0d8">
+          <text x="16" y="500" font-weight="700" fill="#dbe6f2">Legende</text>
+          <circle cx="24" cy="462" r="7" fill="#c0392b"/>
+          <text x="38" y="466">Subduktionszone</text>
+          <circle cx="168" cy="462" r="7" fill="#e67e22"/>
+          <text x="182" y="466">Hot Spot</text>
+          <circle cx="272" cy="462" r="7" fill="#8e44ad"/>
+          <text x="286" y="466">Maar</text>
+          <circle cx="348" cy="462" r="7" fill="#16a085"/>
+          <text x="362" y="466">Vulkanische Decke</text>
+          <circle cx="510" cy="462" r="7" fill="#2c3e50"/>
+          <text x="524" y="466">Risikogebiet</text>
+        </g>
+      </svg>
+    </div>
+    <p id="kartenStatus"></p>
+  </section>
+
+  <section class="bereich" aria-labelledby="stationenTitel">
+    <h2 id="stationenTitel">3 · Stationen freigeben und Codes einloesen</h2>
+    <div id="stationenListe"></div>
+  </section>
+
+  <section class="bereich" aria-labelledby="exportTitel">
+    <h2 id="exportTitel">4 · Auswertung</h2>
+    <div id="exportBox"></div>
+  </section>
+
+  <p class="fuss">
+    Vulkanspiel · läuft komplett offline im Browser · keine Daten werden übertragen ·
+    Regeln und Aufgaben in <code>REGELN.md</code> und <code>data/stationen.json</code>
+  </p>
+</div>
+
+<script src="assets/spiel.js"></script>
+<script src="assets/ui.js"></script>
+</body>
+</html>
