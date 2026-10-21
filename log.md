@@ -133,3 +133,15 @@ bearbeiten kann:
 - Kein Eintrag im Wiki-Log vorgenommen: Das Spiel ist ein eigenes Projekt, das Wiki
   bleibt Inhaltsquelle.
 
+## [2026-10-21] export | Auf GitHub übertragen
+- Repository: https://github.com/DocBiber/Vulkanspiel (öffentlich, Standardbranch `main`)
+- Angelegt mit `gh repo create --public --source=. --remote=origin --push`
+- Erster Commit `25fcfd4`: 11 Dateien (index.html, assets/, data/, scripts/, README.md,
+  REGELN.md, index.md, log.md, .gitignore)
+- Ergänzt für GitHub: `README.md` (Schnellstart, Stationen, Punkte, Dateiübersicht)
+  und `.gitignore` (Betriebssystem- und Editor-Reste)
+- Arbeitsverzeichnis sauber, Branch folgt `origin/main`
+- Geprüft: README und index.html auf GitHub inhaltlich vollständig (10218 bzw. 8768 Bytes)
+- Nächste Schritte: optional GitHub Pages aktivieren, damit die Klasse das Spiel über
+  eine URL öffnen kann statt über eine lokale Datei
+
