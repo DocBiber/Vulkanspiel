@@ -4,73 +4,79 @@ Sammelspiel zur Wiederholung der physischen Geografie (LK Geografie, Gymnasium B
 Bildungsplan 2016). Browser-Game, läuft ohne Installation und ohne Internetverbindung.
 Eine Runde dauert 45 Minuten.
 
+Das Spiel orientiert sich am [LMZ GeoPortal](https://geo.lmz-bw.de/gu/vegetation/#/): Die
+Weltkarte ist das Spielfeld, jede richtige Antwort deckt eine Region auf.
+
 ## Schnellstart
 
 1. `index.html` im Browser öffnen (Doppelklick genügt, kein Server nötig).
-2. Gruppe anmelden: Name eingeben, 10 Startpunkte werden gutgeschrieben.
-3. Aufgabenzettel an den Stationen in der Klasse auslegen.
-4. Die Gruppe löst die Aufgabe, die Lehrkraft gibt die Station frei und liest den Kurzcode vor.
-5. Die Gruppe trägt den Code ein — das Kartenstück erscheint auf der Weltkarte.
-6. Am Ende: Punkteübersicht als CSV exportieren.
+2. Gruppe anmelden: Spielfigur wählen, Name eingeben, 10 Startpunkte werden gutgeschrieben.
+3. Eine Region auf der Weltkarte anklicken.
+4. Zwei Fragen beantworten — richtig beantwortet deckt die Region farbig auf und bringt Punkte.
+5. Eine Antwort ins Tagebuch schreiben.
+6. Am Ende: Punkte als CSV und das Tagebuch als Text herunterladen.
 
 Die ausführlichen Regeln stehen in [REGELN.md](REGELN.md).
 
-## Die fünf Stationen
+## Die fünf Regionen
 
-| Nr. | Kürzel | Thema | Station im Raum |
+| Nr. | Kürzel | Region | Thema |
 |---|---|---|---|
-| 1 | SUB | Vulkanismus an Subduktionszonen | Tafelbereich Nord |
-| 2 | HOT | Schildvulkane und Hot Spots | Fensterbereich West |
-| 3 | MAAR | Maare und Vulkanfelder | Regalbereich |
-| 4 | LIP | Vulkanische Decken (LIPs) | Türbereich Süd |
-| 5 | RISIKO | Risiko und Vulnerabilität | Mitte |
+| 1 | SUB | Subduktionszonen des Pazifiks | Schichtvulkan, explosiver Vulkanismus |
+| 2 | HOT | Hawaii-Hot-Spot | Schildvulkan, effusiver Vulkanismus |
+| 3 | MAAR | Maar-Feld der Eifel | Phreatomagmatische Explosion |
+| 4 | LIP | Deccan-Trapp, Indien | Vulkanische Decken, Klimawirkung |
+| 5 | RISIKO | Nyiragongo und Goma | Risiko, Exposition, Vulnerabilität |
 
-## Punkte
+## Punkte und Fortschritt
 
 | Leistung | Punkte |
 |---|---|
-| Station gelöst und Code eingegeben | 10 |
-| Begründung vollständig | +5 |
-| Station als Erste gelöst | +3 |
-| Code falsch eingegeben | −5 |
+| Multiple-Choice-Frage richtig beantwortet | 10 |
+| Tagebuch-Frage abgegeben | 5 |
 
-Höchstpunktzahl pro Gruppe: 100 (10 Startpunkte + 5 × 18).
+Pro Region sind 25 Punkte möglich. Höchstpunktzahl: 135 (10 Startpunkte + 5 × 25).
+Der Fortschritt zeigt zusätzlich an, wieviele der fünf Regionen aufgedeckt sind.
 
-## Wie die Codes funktionieren
+## Ablauf in einer Region
 
-Jede Station hat genau einen Kurzcode aus vier Zeichen (A–Z ohne I und O, also
-331.776 mögliche Kombinationen). Die Codes werden beim ersten Start zufällig erzeugt
-und im Browser gespeichert. Sie sind nicht ableitbar und nicht ratbar.
+1. Die Gruppe klickt eine Region auf der Weltkarte an.
+2. Zwei Multiple-Choice-Fragen, jede mit vier Antwortmöglichkeiten — genau eine ist richtig.
+3. Eine richtige Antwort bringt 10 Punkte und wird mit einer Erklärung bestätigt.
+4. Sind beide Fragen richtig, wird die Region farbig aufgedeckt.
+5. Danach gibt es eine offene Tagebuch-Frage mit Freitext-Antwort (5 Punkte).
 
-Die Freigabe erfolgt ausschließlich durch die Lehrkraft über „Station freigeben".
-Das Eingabefeld bleibt bis dahin gesperrt. Ein falscher Code kostet Punkte, schließt
-die Gruppe aber nicht aus.
+Das Tagebuch sammelt die Antworten aller Gruppen. Die Fragen sind bewusst offen, keine
+davon hat eine einzige richtige Lösung:
+
+- „Stell dir vor, du könntest an den Rand des Pazifischen Feuerrings reisen: Was würdest du unbedingt einpacken — und warum?"
+- „Wie würdest du das Klima auf Hawaii mit nur drei Worten beschreiben?"
+- „Was würdest du tun, um die Menschen in Goma besser vor dem Vulkan zu schützen?"
 
 ## Dateien
 
 | Datei | Inhalt |
 |---|---|
-| `index.html` | Oberfläche (Karte inline als SVG, Stationen, Punkte, Export) |
-| `assets/spiel.js` | Spiel-Logik: Gruppen, Punkte, Codes, CSV |
-| `assets/ui.js` | Oberfläche: Anmeldung, Stationen, Karte, Export |
+| `index.html` | Oberfläche (Karte inline als SVG, Regionen, Fragen, Tagebuch, Export) |
+| `assets/inhalte.js` | Inhalte: Regionen, Multiple-Choice-Fragen, Tagebuch-Fragen, Spielfiguren |
+| `assets/logik.js` | Logik: Gruppen, Figuren, Fragen, Punkte, Fortschritt, Tagebuch, Export |
+| `assets/oberflaeche.js` | Oberfläche: Anmeldung, Karte, Regionsbereich, Tagebuch, Auswertung |
 | `assets/style.css` | Basis-Styles |
 | `REGELN.md` | Spielregeln für Lehrkraft und Schüler |
-| `data/stationen.json` | Aufgaben, Lösungshinweise, Prüfkriterien |
-| `scripts/pruefe_spiel.js` | Testlauf der Logik (`node scripts/pruefe_spiel.js`) |
+| `scripts/pruefe_logik.js` | Testlauf der Logik (`node scripts/pruefe_logik.js`) |
 | `log.md` | Änderungsjournal |
 
-Die Weltkarte ist als SVG direkt in `index.html` eingebettet. Damit funktioniert das
-Spiel auch per Doppelklick über `file://` — ohne Server und ohne `fetch`.
+Die Inhalte liegen in `assets/inhalte.js`, die Weltkarte ist als SVG direkt in `index.html`
+eingebettet. Beides wird ohne `fetch()` geladen, funktioniert also auch per Doppelklick
+über `file://`.
 
 ## Inhaltsquellen
 
-Die Aufgaben und Lösungshinweise beruhen auf dem Geografie-Wiki des Projekts
+Die Fragen und Erklärungen beruhen auf dem Geografie-Wiki des Projekts
 ([GeoWiki](https://github.com/DocBiber/GeoWiki)): Vulkanarten, Vulkanprozesse,
-Vulnerabilitäts-Begriffe und Raumbeispiele. Die Aufgaben zu Station 2 (Hot Spots),
-Station 4 (Vulkanische Decken) und Station 5 (Risiko/Vulnerabilität) sind eigene
-Ergänzungen.
+Vulnerabilitäts-Begriffe und Raumbeispiele.
 
 ## Mitmachen
 
-Fehler oder Verbesserungen gern als Issue oder Pull Request. Die Aufgaben lassen sich
-in `data/stationen.json` anpassen, ohne den Code zu ändern.
+Fehler oder Verbesserungen gern als Issue oder Pull Request. Die Fragen und Tagebuchfragen
+lässt sich in `assets/inhalte.js` anpassen, ohne den Code zu ändern.

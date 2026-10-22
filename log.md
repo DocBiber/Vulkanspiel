@@ -148,16 +148,37 @@ bearbeiten kann:
 - Geprueft im Browser: alle fuenf Aufgaben sichtbar, Loesungshinweis und Pruefkriterien
   aufklappbar, Spielablauf unveraendert.
 
-## [2026-10-22] query | Referenz-Design LMZ GeoPortal untersucht
-- Quelle: https://geo.lmz-bw.de/gu/vegetation/#/ (Quasar/Vue, MapLibre GL)
-- Aufbau: Weltkarte als Spielfeld, Spielfelder anklicken, Spielfigur (3D-Hund),
-  Namenseingabe, Spielstand, Tagebuch, Sound
-- Tagebuch mit 12 offenen, reflektierenden Fragen, keine Richtig/Falsch-Fragen
-- Bildergalerie mit Erlaeuterungen je Vegetationszone (images.json)
-- Keine Punkte, keine Lehrkraft-Freigabe, kein Wettbewerb
-- Abweichung vom Vulkanspiel: Bei LMZ ist die Karte das Spielfeld und das Tagebuch
-  sammelt Freitext. Beim Vulkanspiel sind Stationen im Klassenraum und die Lehrkraft
-  gibt die Loesung frei. Uebernehmen oder beibehalten ist noch offen.
+## [2026-10-22] update | Spielidee umgebaut: Karte als Spielfeld (v3)
+- Ausgangspunkt: Rueckmeldung des Benutzers, dass die Aufgaben im Spiel nicht sichtbar
+  waren (nur Stationsueberschriften), und der Verweis auf das LMZ GeoPortal.
+- Referenz untersucht: https://geo.lmz-bw.de/gu/vegetation/#/ (Quasar/Vue, MapLibre GL).
+  Weltkarte als Spielfeld, Spielfelder anklicken, Spielfigur, Spielstand, Tagebuch mit
+  12 offenen reflektierenden Fragen, Bildergalerie, Sound. Keine Punkte, keine
+  Lehrkraft-Freigabe, kein Wettbewerb.
+- Entscheidungen des Benutzers nach Rueckfrage:
+  1. Karte als Spielfeld (LMZ), Region anklicken, Aufgabe erscheint im Spiel
+  2. Punkte und Wettbewerb bleiben, Fortschritt zusaetzlich angezeigt
+  3. Freitext-Tagebuch wie bei LMZ, Antworten werden gesammelt und exportiert
+  4. Spielfigur wie bei LMZ, waehlbar und auf der Karte bewegbar
+- Neu gebaut:
+  - assets/inhalte.js: 5 Regionen, je 2 Multiple-Choice-Fragen (4 Optionen, 1 richtig,
+    mit Erklaerung) und 1 offene Tagebuch-Frage; 5 Spielfiguren
+  - assets/logik.js: Gruppen, Figuren, Fragen, Punkte (10 pro richtiger Frage,
+    5 pro Tagebuch-Abgabe, 135 moeglich), Fortschritt, Tagebuch, Export
+  - assets/oberflaeche.js: Anmeldung mit Figurenwahl, klickbare Karte mit wandernder
+    Figur, Regionsbereich mit Fragen und Tagebuch, Auswertung
+  - index.html: Regionen als klickbare SVG-Gruppen, Figur-Marker, Panels, Styles
+- Entfallen gegenueber v2: Kurzcodes, Lehrkraft-Freigabe, Stationen im Klassenraum,
+  Zeitbonus, Abfrage der Begruendung
+- Fehler behoben: Der Fehlerhinweis nach einer falschen Antwort wurde sofort von der
+  Neuzeichnung geloescht und blieb daher unsichtbar.
+- 60 Logik-Tests bestanden (`node scripts/pruefe_logik.js`).
+- Ende-zu-Ende im Browser: alle 5 Regionen aufgedeckt, 110 von 135 Punkten,
+  falsche Antwort rot markiert mit Hinweis, richtige gruen mit Erklaerung,
+  Regionen farbig gefuellt, Tagebuch und CSV korrekt.
+- Offen: Alte Dateien der Version 2 (assets/spiel.js, assets/ui.js, assets/stationen.js,
+  data/stationen.json, scripts/pruefe_spiel.js) sind noch vorhanden, aber nicht mehr
+  eingebunden. Loeschen noch offen, da eine Loeschung Rueckfrage braucht.
 
 ## [2026-10-21] export | Auf GitHub übertragen
 - Repository: https://github.com/DocBiber/Vulkanspiel (öffentlich, Standardbranch `main`)

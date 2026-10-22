@@ -23,23 +23,45 @@
   .gruppenliste .fortschritt { color: #9db4cc; margin-left: auto; }
   .station { border-top: 1px solid #243b53; padding: .85rem 0; }
   .station.erledigt { background: #0f2418; border-radius: 8px; padding: .85rem; margin: .4rem 0; }
-  .auftrag { background: #0a1622; border-left: 4px solid #7ee2a8; border-radius: 0 8px 8px 0;
-             padding: .7rem .9rem; margin: .6rem 0; font-size: 1.02rem; }
-  .ort { color: #9db4cc; font-size: .88rem; margin: 0 0 .6rem; }
-  .lehrerdetails { margin: .6rem 0; color: #a8c0d8; font-size: .92rem; }
-  .lehrerdetails summary { cursor: pointer; color: #ffd28a; }
-  .lehrerdetails ul { margin: .4rem 0 .4rem 1.2rem; }
-  .lehrerdetails p { margin: .4rem 0; }
-  .lehrerblock, .codeblock { display: flex; flex-wrap: wrap; gap: .5rem .9rem; align-items: center;
-                              margin-top: .5rem; }
-  .lehrerblock { color: #a8c0d8; }
-  .lehrerhinweis { font-size: .9rem; color: #ffd28a; }
-  .code-anzeige { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-                  letter-spacing: .15em; color: #ffd28a; font-weight: 700; }
-  .code-anzeige.sichtbar { border-bottom: 2px solid #ffd28a; }
-  .codeToggle { background: #3a2c12; border-color: #6b5220; }
-  .codeToggle:hover { background: #4d3a17; }
-  .codeblock input { width: 5.5rem; letter-spacing: .15em; text-transform: uppercase; }
+
+  /* Spielfiguren */
+  .figurwahl { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .8rem; }
+  .figurwahl button { display: flex; flex-direction: column; align-items: center; gap: .2rem;
+                      padding: .6rem .8rem; background: #0f2036; }
+  .figurwahl button.gewaehlt { border-color: #ffd28a; background: #2a2410; }
+  .figurwahl .symbol { font-size: 1.6rem; line-height: 1; }
+  .figurwahl .name { font-size: .8rem; color: #9db4cc; }
+
+  /* Karte: Regionen und Figur */
+  .region { cursor: pointer; }
+  .region > path, .region > circle { fill: #2c4a6b; fill-opacity: .25; stroke: #7d9bbf; stroke-width: 2; }
+  .region .loch { fill: #0d1b2a; fill-opacity: .9; stroke: none; }
+  .region .risiko-koerper { stroke: #ecf0f1; }
+  .region:hover > path, .region:hover > circle { fill-opacity: .5; }
+  .region.offen > path, .region.offen > circle { stroke-width: 3; }
+  .regionslabel { fill: #cfe0f0; font-size: 15px; font-family: system-ui, sans-serif;
+                  font-weight: 700; text-anchor: middle; pointer-events: none; }
+  #spielfigur { pointer-events: none; }
+
+  /* Regionsbereich */
+  #regionsbereich { margin-top: .6rem; }
+  #regionsbereich.sichtbar { background: #0a1622; border: 1px solid #243b53; border-radius: 10px;
+                              padding: 1rem 1.2rem; }
+  .frage { margin: 1rem 0; padding-top: .8rem; border-top: 1px solid #243b53; }
+  .frage.richtig { background: #0f2418; border-radius: 8px; padding: .8rem; }
+  .fragentext { margin: 0 0 .6rem; }
+  .optionen { display: grid; gap: .4rem; }
+  .option { text-align: left; background: #0f2036; }
+  .option:hover:not(:disabled) { background: #1c3552; }
+  .option.richtig { background: #0f3d24; border-color: #7ee2a8; }
+  .option.falsch { background: #3d1616; border-color: #ff8a80; }
+  .option:disabled { cursor: default; }
+  .erklaerung { color: #9db4cc; font-size: .92rem; margin: .6rem 0 0; }
+
+  .tagebuch-frage { margin: 1rem 0 0; padding-top: .8rem; border-top: 1px dashed #334e68; }
+  .tagebuch-frage textarea { width: 100%; min-height: 4.5rem; resize: vertical; }
+  .tagebuch-aktionen { display: flex; align-items: center; gap: .7rem; margin-top: .5rem; }
+
   .fehler { font-size: .9rem; }
   table { border-collapse: collapse; width: 100%; }
   th, td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid #243b53; }
@@ -60,7 +82,8 @@
   </header>
 
   <section class="bereich" aria-labelledby="anmeldungTitel">
-    <h2 id="anmeldungTitel">1 · Gruppe anmelden</h2>
+    <h2 id="anmeldungTitel">1 · Gruppe anmelden und Spielfigur wählen</h2>
+    <div id="figurwahl" class="figurwahl"></div>
     <form class="anmeldung" onsubmit="return false">
       <input id="gruppenName" placeholder="Gruppenname" maxlength="24" autocomplete="off">
       <button type="button" id="gruppenAnmeldenBtn">Anmelden (10 Startpunkte)</button>
@@ -112,34 +135,40 @@
         <line x1="0" y1="260" x2="1000" y2="260" stroke="#4a6fa5" stroke-width="2" stroke-dasharray="6 4"/>
         <text x="10" y="252" fill="#7d9bbf" font-size="13" font-family="system-ui, sans-serif">Äquator</text>
 
-        <!-- Kartenstuecke: standardmaessig verborgen -->
-        <g id="piece-subduktion" class="stueck" opacity="0">
-          <path d="M95,110 L130,95 L150,140 L135,185 L150,225 L140,260 L110,250 L95,200 L105,155 Z" fill="#c0392b" opacity="0.85"/>
-          <text x="118" y="180" fill="#fff" font-size="15" font-family="system-ui, sans-serif" font-weight="700">S</text>
+        <!-- Regionen: klickbare Spielfelder. "offen" faerbt sie nach richtiger Loesung. -->
+        <g id="piece-subduktion" class="region" data-region="subduktion" data-farbe="#c0392b">
+          <path d="M95,110 L130,95 L150,140 L135,185 L150,225 L140,260 L110,250 L95,200 L105,155 Z"/>
+          <text x="118" y="180" class="regionslabel">SUB</text>
         </g>
 
-        <g id="piece-hotspot" class="stueck" opacity="0">
-          <circle cx="150" cy="330" r="30" fill="#e67e22" opacity="0.85"/>
-          <circle cx="190" cy="345" r="16" fill="#e67e22" opacity="0.7"/>
-          <circle cx="225" cy="360" r="9" fill="#e67e22" opacity="0.55"/>
-          <text x="140" y="336" fill="#fff" font-size="14" font-family="system-ui, sans-serif" font-weight="700">H</text>
+        <g id="piece-hotspot" class="region" data-region="hotspot" data-farbe="#e67e22">
+          <circle cx="150" cy="330" r="30"/>
+          <circle cx="190" cy="345" r="16"/>
+          <circle cx="225" cy="360" r="9"/>
+          <text x="140" y="336" class="regionslabel">HOT</text>
         </g>
 
-        <g id="piece-maar" class="stueck" opacity="0">
-          <circle cx="500" cy="150" r="26" fill="#8e44ad" opacity="0.85"/>
-          <circle cx="500" cy="150" r="15" fill="#0d1b2a" opacity="0.8"/>
-          <circle cx="540" cy="175" r="14" fill="#8e44ad" opacity="0.7"/>
-          <text x="492" y="155" fill="#fff" font-size="14" font-family="system-ui, sans-serif" font-weight="700">M</text>
+        <g id="piece-maar" class="region" data-region="maar" data-farbe="#8e44ad">
+          <circle cx="500" cy="150" r="26"/>
+          <circle cx="500" cy="150" r="15" class="loch"/>
+          <circle cx="540" cy="175" r="14"/>
+          <text x="492" y="155" class="regionslabel">MAAR</text>
         </g>
 
-        <g id="piece-lip" class="stueck" opacity="0">
-          <path d="M640,290 L700,275 L735,315 L720,365 L665,380 L635,345 Z" fill="#16a085" opacity="0.85"/>
-          <text x="668" y="330" fill="#fff" font-size="14" font-family="system-ui, sans-serif" font-weight="700">L</text>
+        <g id="piece-lip" class="region" data-region="lip" data-farbe="#16a085">
+          <path d="M640,290 L700,275 L735,315 L720,365 L665,380 L635,345 Z"/>
+          <text x="668" y="330" class="regionslabel">LIP</text>
         </g>
 
-        <g id="piece-risiko" class="stueck" opacity="0">
-          <path d="M640,300 L660,285 L675,310 L660,330 L640,320 Z" fill="#2c3e50" opacity="0.9" stroke="#ecf0f1" stroke-width="2"/>
-          <text x="640" y="352" fill="#ecf0f1" font-size="13" font-family="system-ui, sans-serif" font-weight="700">R</text>
+        <g id="piece-risiko" class="region" data-region="risiko" data-farbe="#2c3e50">
+          <path d="M640,300 L660,285 L675,310 L660,330 L640,320 Z" class="risiko-koerper"/>
+          <text x="640" y="352" class="regionslabel">RISIKO</text>
+        </g>
+
+        <!-- Spielfigur: wird per Klick auf eine Region dorthin gesetzt -->
+        <g id="spielfigur" transform="translate(600,470)">
+          <circle r="17" fill="#ffd28a" stroke="#0d1b2a" stroke-width="3"/>
+          <text id="spielfigur-symbol" y="8" text-anchor="middle" font-size="22">🌋</text>
         </g>
 
         <!-- Legende -->
@@ -161,14 +190,22 @@
     <p id="kartenStatus"></p>
   </section>
 
-  <section class="bereich" aria-labelledby="stationenTitel">
-    <h2 id="stationenTitel">3 · Stationen: Aufgaben, Freigabe, Codes</h2>
-    <div id="stationenListe"></div>
+  <section class="bereich" aria-labelledby="regionsTitel">
+    <h2 id="regionsTitel">3 · Region: Fragen und Tagebuch</h2>
+    <p class="hinweis">Klickt eine Region auf der Karte an. Dort beantwortet ihr zwei
+      Fragen und schreibt eine Antwort ins Tagebuch. Richtig beantwortet deckt die Region
+      auf und bringt Punkte.</p>
+    <div id="regionsbereich"></div>
   </section>
 
-  <section class="bereich" aria-labelledby="exportTitel">
-    <h2 id="exportTitel">4 · Auswertung</h2>
-    <div id="exportBox"></div>
+  <section class="bereich" aria-labelledby="tagebuchTitel">
+    <h2 id="tagebuchTitel">4 · Tagebuch aller Gruppen</h2>
+    <div id="tagebuchBox"></div>
+  </section>
+
+  <section class="bereich" aria-labelledby="auswertungTitel">
+    <h2 id="auswertungTitel">5 · Auswertung</h2>
+    <div id="auswertungBox"></div>
   </section>
 
   <p class="fuss">
@@ -177,8 +214,8 @@
   </p>
 </div>
 
-<script src="assets/stationen.js"></script>
-<script src="assets/spiel.js"></script>
-<script src="assets/ui.js"></script>
+<script src="assets/inhalte.js"></script>
+<script src="assets/logik.js"></script>
+<script src="assets/oberflaeche.js"></script>
 </body>
 </html>

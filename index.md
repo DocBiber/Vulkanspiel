@@ -10,67 +10,64 @@ sources: []
 # Vulkanspiel
 
 Browser-Sammelspiel zur Wiederholung der physischen Geografie (LK Geografie, Gymnasium BW).
-Eine Runde: 45 Minuten, 5 Gruppen, 5 Stationen.
+Eine Runde: 45 Minuten, 5 Gruppen, 5 Regionen auf einer Weltkarte.
+
+Das Spiel orientiert sich am LMZ GeoPortal: Die Weltkarte ist das Spielfeld, jede richtige
+Antwort deckt eine Region auf. Dazu gibt es Punkte, einen Wettbewerb, einen Fortschritt
+(Spielstand) und ein Tagebuch mit Freitext-Antworten.
 
 ## Schnellstart
 
 1. `index.html` im Browser öffnen (Doppelklick genügt, kein Server nötig).
-2. Gruppe anmelden: Name eingeben, 10 Startpunkte werden gutgeschrieben.
-3. Aufgabenzettel an den Stationen in der Klasse auslegen.
-4. Gruppe löst Aufgabe, Lehrkraft gibt Kurzcode bekannt.
-5. Code in der Kartenansicht eingeben → Kartenstück erscheint.
-6. Am Ende: Punkteübersicht als CSV exportieren.
+2. Gruppe anmelden: Spielfigur wählen, Name eingeben, 10 Startpunkte werden gutgeschrieben.
+3. Eine Region auf der Weltkarte anklicken.
+4. Zwei Fragen beantworten — richtig beantwortet deckt die Region farbig auf.
+5. Eine Antwort ins Tagebuch schreiben.
+6. Am Ende: Punkte als CSV und das Tagebuch als Text herunterladen.
 
 ## Dateien
 
 | Datei | Inhalt |
 |---|---|
-| `index.html` | Oberfläche (Karte inline als SVG, Stationen, Punkte, Export) |
-| `assets/stationen.js` | **Aufgaben**: Auftrag, Lösungshinweis, Prüfkriterien je Station |
-| `assets/spiel.js` | Spiel-Logik: Gruppen, Punkte, Codes, CSV |
-| `assets/ui.js` | Oberfläche: Anmeldung, Stationen, Karte, Export |
+| `index.html` | Oberfläche (Karte inline als SVG, Regionen, Fragen, Tagebuch, Export) |
+| `assets/inhalte.js` | **Inhalte**: Regionen, Multiple-Choice-Fragen, Tagebuch-Fragen, Spielfiguren |
+| `assets/logik.js` | Logik: Gruppen, Figuren, Fragen, Punkte, Fortschritt, Tagebuch, Export |
+| `assets/oberflaeche.js` | Oberfläche: Anmeldung, Karte, Regionsbereich, Tagebuch, Auswertung |
 | `assets/style.css` | Basis-Styles |
-| `data/stationen.json` | Lesbare Kopie der Aufgaben (der Test prüft die Gleichheit) |
 | `REGELN.md` | Spielregeln für Lehrkraft und Schüler |
-| `scripts/pruefe_spiel.js` | Testlauf der Logik (`node scripts/pruefe_spiel.js`) |
+| `scripts/pruefe_logik.js` | Testlauf der Logik (`node scripts/pruefe_logik.js`) |
 | `log.md` | Änderungsjournal |
 
-Die Aufgaben liegen in `assets/stationen.js`. Sie werden per `<script src>` eingebunden
-und nicht per `fetch()` geladen — dadurch funktioniert das Spiel auch per Doppelklick
-über `file://`. Die Oberfläche zeigt den Auftrag jeder Station an; Lösungshinweis und
-Prüfkriterien stehen in einem aufklappbaren Abschnitt für die Lehrkraft.
+Die Inhalte liegen in `assets/inhalte.js`, die Weltkarte ist als SVG direkt in `index.html`
+eingebettet. Beides wird per `<script src>` beziehungsweise inline eingebunden und nicht
+per `fetch()` geladen — dadurch funktioniert das Spiel auch per Doppelklick über `file://`.
 
-`data/stationen.json` ist eine lesbare Kopie derselben Aufgaben. Der Test
-`scripts/pruefe_spiel.js` vergleicht beide Dateien und schlägt fehl, sobald sie
-auseinanderlaufen.
+## Regionen im Überblick
 
-Die Weltkarte ist als SVG direkt in `index.html` eingebettet, ebenfalls wegen `file://`.
-
-## Stationen im Überblick
-
-| Nr. | Kürzel | Thema | Station im Raum |
+| Nr. | Kürzel | Region | Thema |
 |---|---|---|---|
-| 1 | SUB | Vulkanismus an Subduktionszonen | Tafelbereich Nord |
-| 2 | HOT | Schildvulkane und Hot Spots | Fensterbereich West |
-| 3 | MAAR | Maare und Vulkanfelder | Regalbereich |
-| 4 | LIP | Vulkanische Decken (LIPs) | Türbereich Süd |
-| 5 | RISIKO | Risiko und Vulnerabilität | Mitte |
+| 1 | SUB | Subduktionszonen des Pazifiks | Schichtvulkan, explosiver Vulkanismus |
+| 2 | HOT | Hawaii-Hot-Spot | Schildvulkan, effusiver Vulkanismus |
+| 3 | MAAR | Maar-Feld der Eifel | Phreatomagmatische Explosion |
+| 4 | LIP | Deccan-Trapp, Indien | Vulkanische Decken, Klimawirkung |
+| 5 | RISIKO | Nyiragongo und Goma | Risiko, Exposition, Vulnerabilität |
 
 ## Status
 
 - [x] Regeln festgelegt
-- [x] 5 Stationen mit Aufgaben, Lösungshinweisen und Prüfkriterien
-- [x] Codes: zufällig, einmalig pro Station, im Browser abgelegt
-- [x] Karte als SVG mit fünf Kartenstücken
-- [x] Spiel-Oberfläche (Anmeldung, Stationen, Karte, Auswertung)
-- [x] CSV-Export (Semikolon, UTF-8 mit BOM)
-- [x] 51 Logik-Tests bestanden (`node scripts/pruefe_spiel.js`)
-- [x] Ende-zu-Ende-Durchlauf im Browser: 5 Stationen, 85 von 100 Punkten
+- [x] Karte als Spielfeld mit fünf klickbaren Regionen
+- [x] 10 Multiple-Choice-Fragen mit Erklärungen (2 pro Region)
+- [x] 5 offene Tagebuch-Fragen mit Freitext-Antworten
+- [x] Spielfiguren wählbar, Figur wandert auf der Karte
+- [x] Punkte (je 10 pro richtiger Frage, 5 pro Tagebuch-Abgabe) und Fortschritt
+- [x] Tagebuch aller Gruppen mit Text-Export
+- [x] Punkte-Export als CSV (Semikolon, UTF-8 mit BOM)
+- [x] 60 Logik-Tests bestanden (`node scripts/pruefe_logik.js`)
+- [x] Ende-zu-Ende-Durchlauf im Browser: alle 5 Regionen, 110 von 135 Punkten
 - [ ] Balancing mit einer echten Klasse prüfen
-- [ ] Aufgabenzettel als Ausdruck-Vorlage (PDF oder HTML)
 
 ## Nächster Schritt
 
-Schritt 2: Ausdruck-Vorlage für die Aufgabenzettel bauen, damit die Stationen
-im Klassenraum ausliegen können, und die Punktezahlen mit einer echten Klasse
-gegen die 45 Minuten testen.
+Die 10 Multiple-Choice-Fragen und 5 Tagebuch-Fragen gegen die 45 Minuten testen und bei
+Bedarf anpassen. Danach die alten Dateien der ersten Version aufräumen.
+
