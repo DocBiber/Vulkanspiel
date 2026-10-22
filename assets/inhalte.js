@@ -13,10 +13,21 @@
  *
  * Pro Region: 2 Multiple-Choice-Fragen (je 10 Punkte) und 1 Tagebuch-Frage
  * (5 Punkte). Mit 10 Startpunkten sind 135 Punkte moeglich.
+ *
+ * Codekette und Schloss:
+ *   startcode        Der Aufdruck auf dem Zettel, der die Gruppe am Anfang bekommt.
+ *                    Oeffnet die erste Region.
+ *   code_naechste    Das Loesen einer Region liefert den Code der naechsten Region.
+ *   symbol           Jede Region traegt ein Symbol. Mit allen fuenf Symbolen
+ *                    laesst sich das Schloss oeffnen (Bonus und Abschluss).
+ *
+ * Die Codes sind bewusst kurze deutsche Worte, damit sie sich gut auf einen
+ * Zettel schreiben und vorlesen lassen. Sie sind nicht die Loesung einer Frage,
+ * sondern Teil der Spielhandlung.
  */
 window.VULKAN_STATIONEN = {
   "spiel": "Vulkanspiel",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "created": "2026-10-21",
   "updated": "2026-10-22",
   "zielgruppe": "LK Geografie, Gymnasium Baden-Württemberg, Klassen 11/12",
@@ -26,8 +37,15 @@ window.VULKAN_STATIONEN = {
     "frage_richtig": 10,
     "tagebuch_abgabe": 5
   },
+  "startcode": "ASCHE",
+  "startcode_text": "Auf dem Zettel steht nur ein Wort: ASCHE. Darunter ein Strich und fünf kleine Felder.",
+  "schloss": {
+    "bonuspunkte": 10,
+    "code": "ERUPTION",
+    "text": "Das Schloss springt auf. Darunter liegt ein Zettel: ERUPTION. Damit habt ihr den Vulkan erweckt."
+  },
   "spielfiguren": [
-    { "id": "vulkan",     "symbol": "🌋", "name": "Vulkanforscherin" },
+    { "id": "vulkan",     "symbol": "🔭", "name": "Vulkanforscherin" },
     { "id": "gletscher",  "symbol": "🧊", "name": "Gletscherforscherin" },
     { "id": "seismologe", "symbol": "📡", "name": "Seismologin" },
     { "id": "fernerkun",  "symbol": "🛰️", "name": "Fernerkundung" },
@@ -42,6 +60,9 @@ window.VULKAN_STATIONEN = {
       "svg_id": "piece-subduktion",
       "farbe": "#c0392b",
       "figur": { "x": 291.7, "y": 291.7 },
+      "symbol": "🌋",
+      "symbol_name": "Vulkan",
+      "code_naechste": "FUNKEN",
       "fragen": [
         {
           "id": "sub-1",
@@ -87,6 +108,9 @@ window.VULKAN_STATIONEN = {
       "svg_id": "piece-hotspot",
       "farbe": "#e67e22",
       "figur": { "x": 69.4, "y": 194.4 },
+      "symbol": "🌊",
+      "symbol_name": "Welle",
+      "code_naechste": "WELLE",
       "fragen": [
         {
           "id": "hot-1",
@@ -132,6 +156,9 @@ window.VULKAN_STATIONEN = {
       "svg_id": "piece-maar",
       "farbe": "#8e44ad",
       "figur": { "x": 519.4, "y": 110.6 },
+      "symbol": "💧",
+      "symbol_name": "Tropfen",
+      "code_naechste": "TROPFEN",
       "fragen": [
         {
           "id": "maar-1",
@@ -177,6 +204,9 @@ window.VULKAN_STATIONEN = {
       "svg_id": "piece-lip",
       "farbe": "#16a085",
       "figur": { "x": 711.1, "y": 197.2 },
+      "symbol": "🪨",
+      "symbol_name": "Gestein",
+      "code_naechste": "DECKE",
       "fragen": [
         {
           "id": "lip-1",
@@ -222,6 +252,9 @@ window.VULKAN_STATIONEN = {
       "svg_id": "piece-risiko",
       "farbe": "#2c3e50",
       "figur": { "x": 581.1, "y": 254.2 },
+      "symbol": "🔥",
+      "symbol_name": "Feuer",
+      "code_naechste": "",
       "fragen": [
         {
           "id": "ris-1",

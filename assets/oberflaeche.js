@@ -36,13 +36,14 @@
   }
 
   function meldeGruppeAn() {
-    var ergebnis = V.gruppeAnmelden($('gruppenName').value, gewaehlteFigur);
+    var ergebnis = V.gruppeAnmelden($('gruppenName').value, gewaehlteFigur, $('startcode').value);
     if (!ergebnis.ok) {
       $('anmeldungFehler').textContent = ergebnis.fehler;
       return;
     }
     $('anmeldungFehler').textContent = '';
     $('gruppenName').value = '';
+    $('startcode').value = '';
     zeichne();
   }
 
@@ -65,7 +66,8 @@
     if (!g) return;
     var r = V.REGIONEN.filter(function (x) { return x.id === regionId; })[0];
     if (!r) return;
-    bewegeFigur(r);
+    // Die Figur wandert nur zu Regionen, die die Gruppe oeffnen darf.
+    if (g.regionen[regionId] && g.regionen[regionId].freigeschaltet) bewegeFigur(r);
     zeigeRegion(regionId);
   }
 
@@ -75,14 +77,17 @@
     V.REGIONEN.forEach(function (r) {
       var el = $(r.svg_id);
       if (!el) return;
-      var offen = !!(g && g.regionen[r.id] && g.regionen[r.id].offen);
+      var f = g && g.regionen[r.id];
+      var offen = !!(f && f.offen);
+      var freigeschaltet = !!(f && f.freigeschaltet);
       el.classList.toggle('offen', offen);
+      el.classList.toggle('freigeschaltet', freigeschaltet);
       if (offen) el.setAttribute('data-offen', '1');
       else el.removeAttribute('data-offen');
       el.setAttribute('data-region', r.id);
+      el.setAttribute('data-freigeschaltet', freigeschaltet ? '1' : '0');
       // Fuellfarbe steht in den Daten (data-farbe), CSS kann data-Attribute nicht lesen.
       el.querySelectorAll('path, circle').forEach(function (node) {
-        if (node.classList.contains('loch')) return;
         node.style.fill = offen ? r.farbe : '';
       });
     });
@@ -101,6 +106,40 @@
     if (!g || !r) return;
 
     var f = g.regionen[r.id];
+
+    // Verschlossene Region: erst der Code eintippen.
+    if (!f.freigeschaltet) {
+      var box0 = $('regionsbereich');
+      box0.innerHTML =
+        '<h3>' + esc(r.name) + ' — verschlossen</h3>' +
+        '<p class="ort">' + esc(r.kuerzel) + ' · Station ' + V.REGIONEN.indexOf(r) + 1 +
+        ' von ' + V.REGIONEN.length + '</p>' +
+        '<p class="hinweis">Dieses Gebiet ist noch verschlossen. Sucht den Zettel, der zu ' +
+        'dieser Station gehoert, und tragt den Aufdruck ein.</p>' +
+        '<div class="codeblock">' +
+        '<label for="region-code-' + esc(r.id) + '">Aufdruck:</label>' +
+        '<input id="region-code-' + esc(r.id) + '" class="code-font" maxlength="20" ' +
+        'autocomplete="off" placeholder="....">' +
+        '<button type="button" data-code="' + esc(r.id) + '">Aufschliessen</button>' +
+        '<span class="fehler" id="code-hinweis-' + esc(r.id) + '"></span>' +
+        '</div>' +
+        '<p class="hinweis">Der Aufdruck der ersten Station steht auf dem Zettel, den ihr am ' +
+        'Anfang bekommen habt.</p>';
+      box0.setAttribute('data-region', regionId);
+      box0.classList.add('sichtbar');
+
+      var eingabe = $('region-code-' + r.id);
+      if (eingabe) {
+        eingabe.addEventListener('keydown', function (ev) {
+          if (ev.key === 'Enter') { ev.preventDefault(); codeEinloesen(r.id); }
+        });
+      }
+      box0.querySelectorAll('button[data-code]').forEach(function (b) {
+        b.addEventListener('click', function () { codeEinloesen(b.getAttribute('data-code')); });
+      });
+      return;
+    }
+
     var offen = f.offen;
     var richtige = V.richtigeInRegion(g, r.id);
 
@@ -110,6 +149,24 @@
 
     if (offen) {
       html += '<p class="ok">Region aufgedeckt. Die Fragen bleiben zum Nachlesen offen.</p>';
+      // Das Symbol der Station und der Code der naechsten Station.
+      html += '<div class="stationszettel">' +
+        '<div class="stationssymbol" title="' + esc(r.symbol_name) + '">' + esc(r.symbol) + '</div>' +
+        '<div class="stationszettel-text">' +
+        '<p><strong>Ihr findet einen Zettel mit einem Symbol:</strong> ' + esc(r.symbol) +
+        ' (' + esc(r.symbol_name) + ')</p>' +
+        '<p>Das Symbol ist euer Beweis fuer diese Station. Sammelt alle fuenf — sie oeffnen ' +
+        'das Schloss.</p>';
+      if (r.code_naechste) {
+        html += '<p>Darunter steht ein Aufdruck: <span class="code-anzeige sichtbar">' +
+          esc(r.code_naechste) + '</span></p>' +
+          '<p class="hinweis">Dieser Aufdruck oeffnet die naechste Station: <strong>' +
+          esc(naechsteRegionName(r.id)) + '</strong>. Tragt ihn dort ein.</p>';
+      } else {
+        html += '<p class="hinweis">Das war die letzte Station. Mit allen fuenf Symbolen ' +
+          'könnt ihr jetzt das Schloss öffnen.</p>';
+      }
+      html += '</div></div>';
     } else if (richtige > 0) {
       html += '<p class="hinweis">Schon ' + richtige + ' von ' + r.fragen.length +
         ' Fragen richtig. Beantwortet alle Fragen richtig, um die Region aufzudecken.</p>';
@@ -176,6 +233,24 @@
         tagebuchAbspeichern(teile[0], teile[1]);
       });
     });
+  }
+
+  /** Name der Region, die auf eine gegebene folgt. */
+  function naechsteRegionName(regionId) {
+    var i = V.REGIONEN.findIndex(function (r) { return r.id === regionId; });
+    return i >= 0 && i + 1 < V.REGIONEN.length ? V.REGIONEN[i + 1].name : '';
+  }
+
+  function codeEinloesen(regionId) {
+    var feld = $('region-code-' + regionId);
+    var ergebnis = V.codeEinloesen(regionId, feld ? feld.value : '');
+    if (!ergebnis.ok) {
+      var hinweis = $('code-hinweis-' + regionId);
+      if (hinweis) hinweis.textContent = ergebnis.fehler;
+      return;
+    }
+    zeichne();
+    zeigeRegion(regionId);
   }
 
   function antworten(regionId, frageId, auswahl, knopf) {
@@ -251,7 +326,7 @@
       return;
     }
     var html = '<table><thead><tr><th>Gruppe</th><th>Figur</th><th>Punkte</th>' +
-      '<th>Regionen</th><th>Tagebuch</th></tr></thead><tbody>';
+      '<th>Regionen</th><th>Symbole</th><th>Tagebuch</th><th>Schloss</th></tr></thead><tbody>';
     gruppen.slice().sort(function (a, b) { return b.punkte - a.punkte; }).forEach(function (g, i) {
       var eintraege = 0;
       V.REGIONEN.forEach(function (r) {
@@ -263,7 +338,9 @@
       });
       html += '<tr><td>' + (i === 0 ? '★ ' : '') + esc(g.name) + '</td><td>' +
         esc(g.symbol) + ' ' + esc(g.figurName) + '</td><td>' + g.punkte + '</td><td>' +
-        V.fortschritt(g) + '/' + V.REGIONEN.length + '</td><td>' + eintraege + '</td></tr>';
+        V.fortschritt(g) + '/' + V.REGIONEN.length + '</td><td>' +
+        V.symbole(g).length + '/' + V.REGIONEN.length + '</td><td>' + eintraege + '</td><td>' +
+        (g.schlossAuf ? 'geoeffnet' : '—') + '</td></tr>';
     });
     html += '</tbody></table>';
 
@@ -272,8 +349,10 @@
       '<button type="button" id="csvHerunterladen">Punkte als CSV</button>' +
       (eintraege ? '<button type="button" id="tagebuchHerunterladen">Tagebuch herunterladen</button>' : '') +
       '<button type="button" id="csvVorschauBtn">CSV anzeigen</button>' +
+      '<button type="button" id="lehrkraftUebersichtBtn">Lehrkraft: Codes anzeigen</button>' +
       '<button type="button" id="spielZuruecksetzen">Spiel zuruecksetzen</button>' +
-      '</div><pre id="csvVorschau" style="display:none"></pre>';
+      '</div><pre id="csvVorschau" style="display:none"></pre>' +
+      '<pre id="lehrkraftVorschau" style="display:none"></pre>';
     box.innerHTML = html;
 
     $('csvHerunterladen').addEventListener('click', function () { download(V.csvBlob(), 'vulkanspiel_punkte.csv'); });
@@ -284,14 +363,38 @@
       if (pre.style.display === 'none') { pre.textContent = V.exportCSV(); pre.style.display = 'block'; }
       else { pre.style.display = 'none'; pre.textContent = ''; }
     });
+    $('lehrkraftUebersichtBtn').addEventListener('click', function () {
+      var pre = $('lehrkraftVorschau');
+      if (pre.style.display === 'none') { pre.textContent = lehrkraftText(); pre.style.display = 'block'; }
+      else { pre.style.display = 'none'; pre.textContent = ''; }
+    });
     $('spielZuruecksetzen').addEventListener('click', function () {
-      if (window.confirm('Wirklich alle Gruppen, Punkte, Regionen und Tagebuch-Eintraege loeschen?')) {
+      if (window.confirm('Wirklich alle Gruppen, Punkte, Regionen, Symbole und Tagebuch-Eintraege loeschen?')) {
         V.reset();
         $('regionsbereich').classList.remove('sichtbar');
         $('regionsbereich').innerHTML = '';
         zeichne();
       }
     });
+  }
+
+  /** Die Codekette als Text — nur fuer die Lehrkraft. */
+  function lehrkraftText() {
+    var u = V.lehrkraftUebersicht();
+    var teile = [];
+    teile.push('Startcode (Aufdruck auf dem Zettel): ' + u.startcode);
+    teile.push(u.startcodeText);
+    teile.push('');
+    u.kette.forEach(function (s) {
+      var zeile = s.position + '. ' + s.kuerzel + ' ' + s.region +
+        ' — Symbol: ' + s.symbol + ' (' + s.symbolName + ')' +
+        ' — Aufdruck zum Oeffnen: ' + (s.codeZumOeffnen || '—');
+      if (s.codeNaechste) zeile += ' — Aufdruck der naechsten Station: ' + s.codeNaechste;
+      teile.push(zeile);
+    });
+    teile.push('');
+    teile.push('Schloss-Code: ' + u.schlossCode);
+    return teile.join('\n');
   }
 
   function download(blob, dateiname) {
@@ -330,6 +433,65 @@
     });
   }
 
+  // ---------- Schloss ----------
+
+  function zeichneSchloss() {
+    var box = $('schlossBox');
+    var g = gruppe();
+    var gefunden = g ? V.symbole(g) : [];
+    var bereit = g ? V.schlossBereit(g) : false;
+
+    var html = '<h3>Das Schloss</h3>';
+    if (!g) {
+      html += '<p class="hinweis">Meldet zuerst eine Gruppe an.</p>';
+      box.innerHTML = html;
+      return;
+    }
+
+    if (g.schlossAuf) {
+      var u = V.lehrkraftUebersicht();
+      html += '<p class="ok">Das Schloss ist geoeffnet. ' + esc(u.schlossCode || '') + '</p>';
+      box.innerHTML = html;
+      return;
+    }
+
+    html += '<p class="hinweis">In jeder Station findet ihr ein Symbol. Mit allen ' +
+      V.REGIONEN.length + ' Symbolen oeffnet sich das Schloss. ' +
+      'Gefunden: ' + gefunden.length + ' von ' + V.REGIONEN.length + '.</p>';
+    html += '<div class="schloss">';
+    V.REGIONEN.forEach(function (r) {
+      var hat = gefunden.some(function (s) { return s.symbol === r.symbol; });
+      html += '<div class="schloss-feld' + (hat ? ' gefunden' : '') + '" title="' +
+        esc(hat ? r.symbol_name : 'noch nicht gefunden') + '">' +
+        (hat ? esc(r.symbol) : '?') + '</div>';
+    });
+    html += '</div>';
+    html += '<div class="schloss-aktionen">' +
+      '<button type="button" id="schlossKnopf"' + (bereit ? '' : ' disabled') + '>Schloss oeffnen</button>' +
+      (bereit ? '<span class="ok">Alle Symbole beisammen.</span>'
+              : '<span class="hinweis">Euch fehlen noch ' +
+                (V.REGIONEN.length - gefunden.length) + ' Symbole.</span>') +
+      '</div>';
+    box.innerHTML = html;
+
+    var knopf = $('schlossKnopf');
+    if (knopf && bereit) {
+      knopf.addEventListener('click', function () {
+        var ergebnis = V.schlossOeffnen();
+        if (!ergebnis.ok) {
+          knopf.textContent = ergebnis.fehler;
+          return;
+        }
+        zeichne();
+        var box2 = $('schlossBox');
+        box2.innerHTML = '<h3>Das Schloss ist offen</h3>' +
+          '<p class="ok">' + esc(ergebnis.text) + '</p>' +
+          '<p>Abschluss-Code: <span class="code-anzeige sichtbar">' + esc(ergebnis.code) +
+          '</span> · Bonus: +' + ergebnis.bonus + ' Punkte · ' + ergebnis.gesamt + ' Punkte insgesamt.</p>';
+      });
+    }
+  }
+
   // ---------- Gesamtzeichnen ----------
 
   function zeichne() {
@@ -340,13 +502,15 @@
     var status = $('kartenStatus');
     if (g) {
       status.textContent = g.name + ' · ' + g.punkte + ' Punkte · ' +
-        V.fortschritt(g) + ' von ' + V.REGIONEN.length + ' Regionen aufgedeckt. ' +
+        V.fortschritt(g) + ' von ' + V.REGIONEN.length + ' Regionen aufgedeckt · ' +
+        V.symbole(g).length + ' von ' + V.REGIONEN.length + ' Symbolen. ' +
         'Klickt eine Region auf der Karte an.';
     } else {
-      status.textContent = 'Bitte zuerst eine Gruppe anmelden und eine Spielfigur waehlen.';
+      status.textContent = 'Bitte zuerst eine Gruppe anmelden, eine Spielfigur waehlen und den Aufdruck vom Zettel eintragen.';
     }
 
     zeichneTagebuch();
+    zeichneSchloss();
     zeichneAuswertung();
 
     // Bereits gewaehlte Region erneut zeigen, damit der Zustand erhalten bleibt
@@ -364,10 +528,10 @@
 
   function init() {
     // Versionsanzeige: Damit ist sofort erkennbar, ob der Browser die aktuelle
-    // Datei geladen hat. In Version 3 gibt es keine Kurzcodes mehr.
+    // Datei geladen hat. In Version 4 gibt es die Codekette und das Schloss.
     var anzeige = $('versionsanzeige');
     if (anzeige) {
-      anzeige.textContent = 'Version ' + V.inhaltVersion + ' · ohne Kurzcodes';
+      anzeige.textContent = 'Version ' + V.inhaltVersion + ' · Codekette';
     }
 
     zeichneFigurwahl();
@@ -375,6 +539,12 @@
     $('gruppenName').addEventListener('keydown', function (ev) {
       if (ev.key === 'Enter') { ev.preventDefault(); meldeGruppeAn(); }
     });
+    var startcode = $('startcode');
+    if (startcode) {
+      startcode.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter') { ev.preventDefault(); meldeGruppeAn(); }
+      });
+    }
     initKarte();
     zeichne();
   }

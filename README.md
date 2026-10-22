@@ -10,23 +10,39 @@ Weltkarte ist das Spielfeld, jede richtige Antwort deckt eine Region auf.
 ## Schnellstart
 
 1. `index.html` im Browser öffnen (Doppelklick genügt, kein Server nötig).
-2. Gruppe anmelden: Spielfigur wählen, Name eingeben, 10 Startpunkte werden gutgeschrieben.
-3. Eine Region auf der Weltkarte anklicken.
-4. Zwei Fragen beantworten — richtig beantwortet deckt die Region farbig auf und bringt Punkte.
+2. Gruppe anmelden: Spielfigur wählen, Name eingeben, den Aufdruck vom Zettel eintragen.
+   10 Startpunkte werden gutgeschrieben.
+3. Die erste Region ist dadurch offen — anklicken und bearbeiten.
+4. Zwei Fragen beantworten — richtig beantwortet deckt die Station farbig auf und bringt
+   das Symbol sowie den Aufdruck der nächsten Station.
 5. Eine Antwort ins Tagebuch schreiben.
-6. Am Ende: Punkte als CSV und das Tagebuch als Text herunterladen.
+6. Mit dem Aufdruck die nächste Station öffnen, bis alle fünf Symbole beisammen sind.
+7. Das Schloss öffnen und am Ende: Punkte als CSV und das Tagebuch als Text herunterladen.
 
 Die ausführlichen Regeln stehen in [REGELN.md](REGELN.md).
 
+## Die Codekette
+
+Die Gruppe bekommt am Anfang einen Zettel mit einem Aufdruck. Jede gelöste Station
+liefert das Symbol der Station und den Aufdruck der nächsten Station. Mit allen fünf
+Symbolen lässt sich das Schloss öffnen.
+
+    Zettel → ASCHE → Station 1 → FUNKEN → Station 2 → WELLE → Station 3
+          → TROPFEN → Station 4 → DECKE → Station 5 → fünftes Symbol → Schloss
+
+Die Aufdrucke stehen in `assets/inhalte.js` (`startcode`, `code_naechste`, `schloss.code`)
+und lassen sich dort ändern. Die Lehrkraft sieht alle Aufdrücke über
+„Lehrkraft: Codes anzeigen“ im Abschnitt Auswertung.
+
 ## Die fünf Regionen
 
-| Nr. | Kürzel | Region | Thema |
-|---|---|---|---|
-| 1 | SUB | Subduktionszonen des Pazifiks | Schichtvulkan, explosiver Vulkanismus |
-| 2 | HOT | Hawaii-Hot-Spot | Schildvulkan, effusiver Vulkanismus |
-| 3 | MAAR | Maar-Feld der Eifel | Phreatomagmatische Explosion |
-| 4 | LIP | Deccan-Trapp, Indien | Vulkanische Decken, Klimawirkung |
-| 5 | RISIKO | Nyiragongo und Goma | Risiko, Exposition, Vulnerabilität |
+| Nr. | Kürzel | Region | Symbol | Thema |
+|---|---|---|---|---|
+| 1 | SUB | Subduktionszonen des Pazifiks | 🌋 Vulkan | Schichtvulkan, explosiver Vulkanismus |
+| 2 | HOT | Hawaii-Hot-Spot | 🌊 Welle | Schildvulkan, effusiver Vulkanismus |
+| 3 | MAAR | Maar-Feld der Eifel | 💧 Tropfen | Phreatomagmatische Explosion |
+| 4 | LIP | Deccan-Trapp, Indien | 🪨 Gestein | Vulkanische Decken, Klimawirkung |
+| 5 | RISIKO | Nyiragongo und Goma | 🔥 Feuer | Risiko, Exposition, Vulnerabilität |
 
 ## Punkte und Fortschritt
 
@@ -34,16 +50,20 @@ Die ausführlichen Regeln stehen in [REGELN.md](REGELN.md).
 |---|---|
 | Multiple-Choice-Frage richtig beantwortet | 10 |
 | Tagebuch-Frage abgegeben | 5 |
+| Schloss geöffnet | 10 |
 
-Pro Region sind 25 Punkte möglich. Höchstpunktzahl: 135 (10 Startpunkte + 5 × 25).
-Der Fortschritt zeigt zusätzlich an, wieviele der fünf Regionen aufgedeckt sind.
+Pro Region sind 25 Punkte möglich. Höchstpunktzahl: 145 (10 Startpunkte + 5 × 25 + 10 Schloss).
+Der Fortschritt zeigt zusätzlich an, wieviele der fünf Regionen aufgedeckt sind und
+wieviele Symbole gefunden sind.
 
 ## Ablauf in einer Region
 
-1. Die Gruppe klickt eine Region auf der Weltkarte an.
+1. Die Gruppe klickt eine Region auf der Weltkarte an. Ist sie verschlossen, erscheint
+   ein Eingabefeld für den Aufdruck.
 2. Zwei Multiple-Choice-Fragen, jede mit vier Antwortmöglichkeiten — genau eine ist richtig.
 3. Eine richtige Antwort bringt 10 Punkte und wird mit einer Erklärung bestätigt.
-4. Sind beide Fragen richtig, wird die Region farbig aufgedeckt.
+4. Sind beide Fragen richtig, wird die Region farbig aufgedeckt. Jetzt bekommt die Gruppe
+   das Symbol der Station und den Aufdruck der nächsten Station.
 5. Danach gibt es eine offene Tagebuch-Frage mit Freitext-Antwort (5 Punkte).
 
 Das Tagebuch sammelt die Antworten aller Gruppen. Die Fragen sind bewusst offen, keine
@@ -58,12 +78,12 @@ davon hat eine einzige richtige Lösung:
 | Datei | Inhalt |
 |---|---|
 | `index.html` | Oberfläche (Karte inline als SVG, Regionen, Fragen, Tagebuch, Export) |
-| `assets/inhalte.js` | Inhalte: Regionen, Multiple-Choice-Fragen, Tagebuch-Fragen, Spielfiguren |
-| `assets/logik.js` | Logik: Gruppen, Figuren, Fragen, Punkte, Fortschritt, Tagebuch, Export |
-| `assets/oberflaeche.js` | Oberfläche: Anmeldung, Karte, Regionsbereich, Tagebuch, Auswertung |
+| `assets/inhalte.js` | Inhalte: Regionen, Multiple-Choice-Fragen, Tagebuch-Fragen, Spielfiguren, Symbole, Aufdrücke |
+| `assets/logik.js` | Logik: Gruppen, Figuren, Fragen, Punkte, Fortschritt, Codekette, Schloss, Tagebuch, Export |
+| `assets/oberflaeche.js` | Oberfläche: Anmeldung, Karte, Regionsbereich, Schloss, Tagebuch, Auswertung |
 | `assets/style.css` | Basis-Styles |
 | `REGELN.md` | Spielregeln für Lehrkraft und Schüler |
-| `scripts/pruefe_logik.js` | Testlauf der Logik (`node scripts/pruefe_logik.js`) |
+| `scripts/pruefe_kette.js` | Testlauf der Logik inkl. Codekette und Schloss (`node scripts/pruefe_kette.js`) |
 | `log.md` | Änderungsjournal |
 
 Die Inhalte liegen in `assets/inhalte.js`, die Weltkarte ist als SVG direkt in `index.html`

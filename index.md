@@ -16,14 +16,30 @@ Das Spiel orientiert sich am LMZ GeoPortal: Die Weltkarte ist das Spielfeld, jed
 Antwort deckt eine Region auf. Dazu gibt es Punkte, einen Wettbewerb, einen Fortschritt
 (Spielstand) und ein Tagebuch mit Freitext-Antworten.
 
+Die Gruppe bekommt am Anfang einen Zettel mit einem Aufdruck. Das Lösen einer Station
+liefert das Symbol der Station und den Aufdruck der nächsten Station. Mit allen fünf
+Symbolen lässt sich am Ende ein Schloss öffnen.
+
 ## Schnellstart
 
 1. `index.html` im Browser öffnen (Doppelklick genügt, kein Server nötig).
-2. Gruppe anmelden: Spielfigur wählen, Name eingeben, 10 Startpunkte werden gutgeschrieben.
-3. Eine Region auf der Weltkarte anklicken.
-4. Zwei Fragen beantworten — richtig beantwortet deckt die Region farbig auf.
+2. Gruppe anmelden: Spielfigur wählen, Name eingeben, Aufdruck vom Zettel eintragen.
+   10 Startpunkte werden gutgeschrieben.
+3. Die erste Region ist dadurch offen — anklicken und bearbeiten.
+4. Zwei Fragen beantworten — richtig beantwortet deckt die Station farbig auf und bringt
+   das Symbol sowie den Aufdruck der nächsten Station.
 5. Eine Antwort ins Tagebuch schreiben.
-6. Am Ende: Punkte als CSV und das Tagebuch als Text herunterladen.
+6. Mit dem Aufdruck die nächste Station öffnen, bis alle fünf Symbole beisammen sind.
+7. Das Schloss öffnen und am Ende: Punkte als CSV und das Tagebuch als Text herunterladen.
+
+## Die Codekette
+
+    Zettel → ASCHE → Station 1 → FUNKEN → Station 2 → WELLE → Station 3
+          → TROPFEN → Station 4 → DECKE → Station 5 → fünftes Symbol → Schloss
+
+Die Aufdrucke stehen in `assets/inhalte.js` (`startcode`, `code_naechste`, `schloss.code`)
+und lassen sich dort ändern. Die Lehrkraft sieht alle Aufdrücke über
+„Lehrkraft: Codes anzeigen“ im Abschnitt Auswertung.
 
 ## Dateien
 
@@ -39,7 +55,8 @@ Antwort deckt eine Region auf. Dazu gibt es Punkte, einen Wettbewerb, einen Fort
 | `scripts/karte_bauen.py` | Baut die Karte und bindet sie in `index.html` ein |
 | `scripts/ne_110m_land.geojson` | Rohdaten der Weltkarte (Natural Earth 110m, Public Domain) |
 | `REGELN.md` | Spielregeln für Lehrkraft und Schüler |
-| `scripts/pruefe_logik.js` | Testlauf der Logik (`node scripts/pruefe_logik.js`) |
+| `scripts/pruefe_kette.js` | Testlauf der Logik inkl. Codekette und Schloss (`node scripts/pruefe_kette.js`) |
+| `scripts/pruefe_logik.js` | Älterer Testlauf der Logik (Version 3, ohne Codekette) |
 | `log.md` | Änderungsjournal |
 
 Die Weltkarte ist keine Zeichnung, sondern echte Geodaten: Natural Earth 110m
@@ -83,12 +100,16 @@ per `fetch()` geladen — dadurch funktioniert das Spiel auch per Doppelklick ü
 - [x] Punkte (je 10 pro richtiger Frage, 5 pro Tagebuch-Abgabe) und Fortschritt
 - [x] Tagebuch aller Gruppen mit Text-Export
 - [x] Punkte-Export als CSV (Semikolon, UTF-8 mit BOM)
-- [x] 60 Logik-Tests bestanden (`node scripts/pruefe_logik.js`)
-- [x] Ende-zu-Ende-Durchlauf im Browser: alle 5 Regionen, 110 von 135 Punkten
+- [x] Codekette: Startcode auf dem Zettel, jeder gelöste Station liefert den Folgencode
+- [x] Symbole pro Station und Schloss mit Bonuspunkten und Abschluss-Code
+- [x] Lehrkraft-Übersicht zeigt alle Aufdrücke
+- [x] 80 Logik-Tests bestanden (`node scripts/pruefe_kette.js`)
+- [x] Ende-zu-Ende-Durchlauf im Browser: Startcode, Kette, 5 Symbole, Schloss, Auswertung
 - [ ] Balancing mit einer echten Klasse prüfen
 
 ## Nächster Schritt
 
-Die 10 Multiple-Choice-Fragen und 5 Tagebuch-Fragen gegen die 45 Minuten testen und bei
-Bedarf anpassen. Danach die alten Dateien der ersten Version aufräumen.
+Den Ablauf mit einer echten Klasse testen: 45 Minuten reichen für fünf Stationen
+à 2 Fragen und eine Tagebuch-Frage nur, wenn die Gruppen wirklich in dieser Reihenfolge
+arbeiten. Danach die alten Dateien der ersten Version aufräumen.
 

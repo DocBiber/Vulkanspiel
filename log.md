@@ -285,3 +285,62 @@ bearbeiten kann:
 - Nächste Schritte: optional GitHub Pages aktivieren, damit die Klasse das Spiel über
   eine URL öffnen kann statt über eine lokale Datei
 
+## [2026-10-22] update | Codekette und Schloss (v4)
+
+Auslöser: Die Gruppe bekommte nach dem Lösen einer Station keinen Code mehr. Gefordert
+wurde ein Startcode auf einem Zettel, ein Code am Ende jeder Station für die nächste
+Station, ein Symbol pro Station und ein Schloss, das sich mit allen fünf Symbolen öffnet.
+
+Umgesetzt:
+
+- **Startcode:** Die Anmeldung verlangt jetzt den Aufdruck vom Zettel. `ASCHE` (configuriert
+  in `assets/inhalte.js` als `startcode`) öffnet die erste Station. Funktioniert in Groß- und
+  Kleinschreibung, mit führenden Leerzeichen, bei allen Gruppen gleich.
+- **Codekette:** Jede Station trägt `code_naechste`. Nach dem Lösen bekommt die Gruppe den
+  Aufdruck der nächsten Station: `ASCHE → FUNKEN → WELLE → TROPFEN → DECKE`. Der Aufdruck
+  wird auf einem Stationszettel angezeigt, zusammen mit dem Symbol der Station.
+- **Verschlossene Stationen:** Eine Station ohne richtigen Aufdruck zeigt nur ein
+  Eingabefeld. Fragen darin bringen keine Punkte.
+- **Symbole:** Jede Station hat ein Symbol (`🌋 🌊 💧 🪨 🔥`). Das Symbol erscheint beim
+  Aufdecken der Station und bleibt in der Punktetabelle sichtbar.
+- **Schloss:** Neu der Abschnitt „4 · Das Schloss" mit fünf Feldern. Sind alle fünf
+  Symbole gesammelt, kann die Gruppe das Schloss öffnen: 10 Bonuspunkte und der
+  Abschluss-Code. Das Schloss ist pro Gruppe einmalig.
+- **Lehrkraft-Übersicht:** Neuer Knopf in der Auswertung zeigt Startcode, alle Aufdrücke,
+  die Symbole und den Schloss-Code als Text.
+- **CSV:** Zwei neue Spalten („Symbole", „Schloss geoeffnet"), jetzt 7 Spalten.
+- **Punkte:** Höchstpunktzahl jetzt 145 (10 Start + 5 × 25 + 10 Schloss).
+
+Dateien:
+
+- `assets/inhalte.js`: `startcode`, `code_naechste` je Region, `symbol` und `symbol_name`,
+  neuer Block `schloss` mit `code`, `bonuspunkte` und `text`. Versionsstand 4.
+- `assets/logik.js`: `gruppeAnmelden` nimmt jetzt den Startcode, neu `codeEinloesen`,
+  `symbole`, `schlossBereit`, `schlossOeffnen`, `lehrkraftUebersicht`. Regionen speichern
+  `freigeschaltet`, Gruppen speichern `symbole` und `schlossAuf`.
+- `assets/oberflaeche.js`: Eingabefeld für den Startcode, Schloss-Bereich, Stationszettel
+  mit Symbol und Folgencode, verschlossene Regionen zeigen ein Code-Eingabefeld.
+- `index.html`: Abschnitt „4 · Das Schloss" neu, Abschnitte 4/5 verschoben auf 5/6,
+  Styles für Zettel, Schloss und Code-Eingabe, Versionsanzeige „Version 4 · Codekette".
+- `scripts/pruefe_kette.js`: neuer Testlauf (80 Prüfungen) für die Logik inkl. Codekette
+  und Schloss. Der ältere `scripts/pruefe_logik.js` bleibt als Test der Version 3 erhalten.
+- `REGELN.md`, `README.md`, `index.md`: Regeln, Ablauf, Codekette, Symbole und Schloss
+  beschrieben.
+
+Geprüft:
+
+- `node scripts/pruefe_kette.js` → 80 bestanden, 0 fehlgeschlagen.
+- Ende-zu-Ende-Durchlauf im Browser über `file://`: Anmeldung ohne Code abgelehnt, mit
+  `ASCHE` angenommen, Kette `FUNKEN → WELLE → TROPFEN → DECKE` durchgespielt, fünf Symbole
+  gesammelt, Schloss geöffnet (120 Punkte), Lehrkraft-Übersicht zeigt alle Aufdrücke.
+  Keine Konsolenfehler.
+- Beim Sichtprüfen im Browser: Startcode-Feld vorhanden, Stationszettel zeigt Symbol und
+  Folgencode, Schloss zeigt „Gefunden: 1 von 5" bzw. „2 von 5".
+
+Offen:
+
+- Die Aufdrücke sind in `assets/inhalte.js` im Klartext. Für eine echte Klasse müssen die
+  Zettel mit den Aufdrucken ausgedruckt werden — die Datei darf dann nicht auf dem
+  Schülerrechner liegen.
+- Balancing mit einer echten Klasse steht noch aus.
+

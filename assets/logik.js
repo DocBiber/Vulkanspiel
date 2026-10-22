@@ -9,26 +9,32 @@
  * Zusaetzlich zum LMZ-Vorbild: Es gibt Punkte und einen Wettbewerb, dazu einen
  * Fortschritt (Spielstand) als Anzahl aufgedeckter Regionen.
  *
+ * Codekette und Schloss:
+ *   Die Gruppe bekommt am Anfang einen Zettel mit einem Aufdruck (Startcode).
+ *   Der Code oeffnet die erste Region. Das Loesen einer Region liefert das Symbol
+ *   der Station und den Code der naechsten Region. Mit allen fuenf Symbolen
+ *   laesst sich das Schloss oeffnen.
+ *
  * Die Inhalte kommen aus assets/inhalte.js (window.VULKAN_STATIONEN).
  * Gespeichert wird nur im Browser (localStorage), es gibt keinen Server.
  */
 (function () {
   'use strict';
 
-  var SPEICHER_KEY = 'vulkanspiel.v3';
+  var SPEICHER_KEY = 'vulkanspiel.v4';
   var INHALTE = (typeof window !== 'undefined' && window.VULKAN_STATIONEN) || null;
 
   // Fallback, falls assets/inhalte.js nicht geladen werden konnte.
   var REGIONEN_FALLBACK = [
-    { id: 'subduktion', nr: 1, kuerzel: 'SUB', name: 'Subduktionszonen des Pazifiks', svg_id: 'piece-subduktion', farbe: '#c0392b', figur: { x: 120, y: 180 }, fragen: [], tagebuch: [] },
-    { id: 'hotspot',    nr: 2, kuerzel: 'HOT', name: 'Hawaii-Hot-Spot',               svg_id: 'piece-hotspot',    farbe: '#e67e22', figur: { x: 150, y: 330 }, fragen: [], tagebuch: [] },
-    { id: 'maar',       nr: 3, kuerzel: 'MAAR', name: 'Maar-Feld der Eifel',          svg_id: 'piece-maar',       farbe: '#8e44ad', figur: { x: 500, y: 150 }, fragen: [], tagebuch: [] },
-    { id: 'lip',        nr: 4, kuerzel: 'LIP', name: 'Deccan-Trapp, Indien',         svg_id: 'piece-lip',        farbe: '#16a085', figur: { x: 680, y: 320 }, fragen: [], tagebuch: [] },
-    { id: 'risiko',     nr: 5, kuerzel: 'RISIKO', name: 'Nyiragongo und Goma',       svg_id: 'piece-risiko',     farbe: '#2c3e50', figur: { x: 660, y: 300 }, fragen: [], tagebuch: [] }
+    { id: 'subduktion', nr: 1, kuerzel: 'SUB', name: 'Subduktionszonen des Pazifiks', svg_id: 'piece-subduktion', farbe: '#c0392b', figur: { x: 120, y: 180 }, symbol: '🌋', symbol_name: 'Vulkan', code_naechste: 'FUNKEN', fragen: [], tagebuch: [] },
+    { id: 'hotspot',    nr: 2, kuerzel: 'HOT', name: 'Hawaii-Hot-Spot',               svg_id: 'piece-hotspot',    farbe: '#e67e22', figur: { x: 150, y: 330 }, symbol: '🌊', symbol_name: 'Welle', code_naechste: 'WELLE', fragen: [], tagebuch: [] },
+    { id: 'maar',       nr: 3, kuerzel: 'MAAR', name: 'Maar-Feld der Eifel',          svg_id: 'piece-maar',       farbe: '#8e44ad', figur: { x: 500, y: 150 }, symbol: '💧', symbol_name: 'Tropfen', code_naechste: 'TROPFEN', fragen: [], tagebuch: [] },
+    { id: 'lip',        nr: 4, kuerzel: 'LIP', name: 'Deccan-Trapp, Indien',         svg_id: 'piece-lip',        farbe: '#16a085', figur: { x: 680, y: 320 }, symbol: '🪨', symbol_name: 'Gestein', code_naechste: 'DECKE', fragen: [], tagebuch: [] },
+    { id: 'risiko',     nr: 5, kuerzel: 'RISIKO', name: 'Nyiragongo und Goma',       svg_id: 'piece-risiko',     farbe: '#2c3e50', figur: { x: 660, y: 300 }, symbol: '🔥', symbol_name: 'Feuer', code_naechste: '', fragen: [], tagebuch: [] }
   ];
 
   var FIGUREN_FALLBACK = [
-    { id: 'vulkan', symbol: '🌋', name: 'Vulkanforscherin' },
+    { id: 'vulkan', symbol: '🔭', name: 'Vulkanforscherin' },
     { id: 'gletscher', symbol: '🧊', name: 'Gletscherforscherin' },
     { id: 'seismologe', symbol: '📡', name: 'Seismologin' },
     { id: 'fernerkun', symbol: '🛰️', name: 'Fernerkundung' },
@@ -41,6 +47,8 @@
   };
 
   var STARTPUNKTE = (INHALTE && INHALTE.startpunkte) || 10;
+  var STARTCODE = (INHALTE && INHALTE.startcode) || 'ASCHE';
+  var SCHLOSS_BONUS = (INHALTE && INHALTE.schloss && INHALTE.schloss.bonuspunkte) || 10;
 
   var REGIONEN = (INHALTE && INHALTE.regionen && INHALTE.regionen.length)
     ? INHALTE.regionen
@@ -54,7 +62,7 @@
 
   function neuerZustand() {
     return {
-      version: 3,
+      version: 4,
       gruppen: [],
       aktivGruppe: null,
       gestartet: false
@@ -64,7 +72,7 @@
   function lade() {
     var z = null;
     try { z = JSON.parse(localStorage.getItem(SPEICHER_KEY) || 'null'); } catch (e) { z = null; }
-    if (!z || z.version !== 3) return neuerZustand();
+    if (!z || z.version !== 4) return neuerZustand();
     return z;
   }
 
@@ -124,12 +132,30 @@
     var f = {};
     REGIONEN.forEach(function (r) {
       f[r.id] = {
-        fragen: {},      // frageId -> { auswahl, richtig, punkte }
-        tagebuch: {},    // frageId -> { text }
-        offen: false
+        freigeschaltet: false,  // Code eingegeben, Region darf bearbeitet werden
+        fragen: {},             // frageId -> { auswahl, richtig, punkte }
+        tagebuch: {},           // frageId -> { text }
+        offen: false            // alle Fragen richtig, Region aufgedeckt
       };
     });
     return f;
+  }
+
+  /** Der Code, der zum Oeffnen einer Region noetig ist. */
+  function codeFuerRegion(regionId) {
+    for (var i = 0; i < REGIONEN.length; i++) {
+      if (REGIONEN[i].id !== regionId) continue;
+      return i === 0 ? STARTCODE : (REGIONEN[i - 1].code_naechste || '');
+    }
+    return '';
+  }
+
+  /** Die Position einer Region in der Kette (1 bis 5). */
+  function kettenPosition(regionId) {
+    for (var i = 0; i < REGIONEN.length; i++) {
+      if (REGIONEN[i].id === regionId) return i + 1;
+    }
+    return 0;
   }
 
   /** Offene Regionen auf der Karte sichtbar machen. */
@@ -174,26 +200,69 @@
 
   // ---------- Aktionen ----------
 
-  function gruppeAnmelden(name, figurId) {
+  /**
+   * Eine Gruppe anmelden. Der Code vom Zettel (Startcode) muss stimmen, sonst
+   * beginnt das Spiel nicht.
+   */
+  function gruppeAnmelden(name, figurId, startcode) {
     name = String(name == null ? '' : name).trim();
     if (!name) return { ok: false, fehler: 'Bitte einen Gruppennamen eingeben.' };
     if (name.length > 24) return { ok: false, fehler: 'Name zu lang (max. 24 Zeichen).' };
     if (gruppe(name)) return { ok: false, fehler: 'Dieser Gruppenname ist bereits vergeben.' };
     if (!figurId) return { ok: false, fehler: 'Bitte eine Spielfigur waehlen.' };
 
+    var code = String(startcode == null ? '' : startcode).trim().toUpperCase();
+    if (!code) return { ok: false, fehler: 'Bitte den Aufdruck vom Zettel eintragen.' };
+    if (code !== String(STARTCODE).toUpperCase()) {
+      return { ok: false, fehler: 'Das ist nicht der Aufdruck vom Zettel. Schaut noch einmal genau hin.' };
+    }
+
     var f = figur(figurId);
+    var regionen = neuerFortschritt();
+    // Der Startcode oeffnet die erste Region der Kette.
+    regionen[REGIONEN[0].id].freigeschaltet = true;
+
     zustand.gruppen.push({
       name: name,
       figur: f.id,
       symbol: f.symbol,
       figurName: f.name,
       punkte: STARTPUNKTE,
-      regionen: neuerFortschritt()
+      regionen: regionen,
+      schlossAuf: false
     });
     zustand.aktivGruppe = name;
     zustand.gestartet = true;
     speichere(zustand);
     return { ok: true, punkte: STARTPUNKTE, figur: f };
+  }
+
+  /**
+   * Einen Code fuer eine Region einloesen. Stimmt er, wird die Region
+   * freigeschaltet; sonst bleibt sie verschlossen.
+   */
+  function codeEinloesen(regionId, code) {
+    var g = aktiv();
+    if (!g) return { ok: false, fehler: 'Keine aktive Gruppe.' };
+    var r = region(regionId);
+    if (!r) return { ok: false, fehler: 'Unbekannte Region.' };
+    var f = g.regionen[regionId];
+    if (f.freigeschaltet) {
+      return { ok: false, fehler: 'Diese Region ist bereits geoeffnet.' };
+    }
+
+    var eingegeben = String(code == null ? '' : code).trim().toUpperCase();
+    var erwartet = String(codeFuerRegion(regionId)).toUpperCase();
+    if (!eingegeben) {
+      return { ok: false, fehler: 'Bitte zuerst den Code eintragen.' };
+    }
+    if (eingegeben !== erwartet) {
+      return { ok: false, fehler: 'Der Code passt nicht zu dieser Region. Versucht es erneut.' };
+    }
+
+    f.freigeschaltet = true;
+    speichere(zustand);
+    return { ok: true, region: r.id, kettenPosition: kettenPosition(regionId) };
   }
 
   function gruppeWaehlen(name) {
@@ -214,6 +283,10 @@
     if (!fr) return { ok: false, fehler: 'Unbekannte Frage.' };
 
     var f = g.regionen[regionId];
+    if (!f.freigeschaltet) {
+      return { ok: false, fehler: 'Diese Region ist noch verschlossen. Ihr braucht zuerst den richtigen Code.' };
+    }
+
     var bisher = f.fragen[frageId];
     if (bisher && bisher.richtig) {
       return { ok: false, fehler: 'Diese Frage wurde bereits richtig beantwortet.' };
@@ -229,6 +302,7 @@
         regionAufdecken(regionId);
       }
       speichere(zustand);
+      var r = region(regionId);
       return {
         ok: true,
         richtig: true,
@@ -236,7 +310,12 @@
         erklaerung: fr.erklaerung || '',
         regionOffen: f.offen,
         richtige: richtigeInRegion(g, regionId),
-        gesamt: region(regionId).fragen.length
+        gesamt: r.fragen.length,
+        // Erst wenn die Region vollstaendig aufgedeckt ist, wird der Zettel
+        // mit dem Symbol und dem Code der naechsten Station gezeigt.
+        symbol: f.offen ? r.symbol : '',
+        symbolName: f.offen ? r.symbol_name : '',
+        codeNaechste: f.offen ? r.code_naechste : ''
       };
     }
 
@@ -247,6 +326,51 @@
       richtige: richtigeInRegion(g, regionId),
       gesamt: region(regionId).fragen.length,
       fehler: 'Nicht richtig. Lies die Erklaerung und versuche es erneut.'
+    };
+  }
+
+  /** Die Symbole, die eine Gruppe bisher gefunden hat. */
+  function symbole(g) {
+    var out = [];
+    REGIONEN.forEach(function (r) {
+      var f = g.regionen[r.id];
+      if (f && f.offen) {
+        out.push({ region: r.name, symbol: r.symbol, symbolName: r.symbol_name, kuerzel: r.kuerzel });
+      }
+    });
+    return out;
+  }
+
+  /** Sind alle fuenf Symbole gesammelt? */
+  function schlossBereit(g) {
+    return symbole(g).length === REGIONEN.length && REGIONEN.length > 0;
+  }
+
+  /**
+   * Das Schloss oeffnen. Geschieht nur, wenn alle Symbole gesammelt sind.
+   * Bringt einen Bonus und den Abschluss.
+   */
+  function schlossOeffnen() {
+    var g = aktiv();
+    if (!g) return { ok: false, fehler: 'Keine aktive Gruppe.' };
+    if (g.schlossAuf) return { ok: false, fehler: 'Das Schloss ist bereits geoeffnet.' };
+    if (!schlossBereit(g)) {
+      return {
+        ok: false,
+        fehler: 'Euch fehlen noch ' + (REGIONEN.length - symbole(g).length) + ' Symbole.',
+        fehlende: REGIONEN.length - symbole(g).length
+      };
+    }
+
+    g.schlossAuf = true;
+    g.punkte += SCHLOSS_BONUS;
+    speichere(zustand);
+    return {
+      ok: true,
+      bonus: SCHLOSS_BONUS,
+      code: (INHALTE && INHALTE.schloss && INHALTE.schloss.code) || '',
+      text: (INHALTE && INHALTE.schloss && INHALTE.schloss.text) || '',
+      gesamt: g.punkte
     };
   }
 
@@ -325,9 +449,10 @@
     return s;
   }
 
-  /** Punkte und Fortschritt je Gruppe. */
+  /** Punkte, Fortschritt und Schloss je Gruppe. */
   function exportCSV() {
-    var kopf = ['Gruppe', 'Spielfigur', 'Punkte', 'Regionen aufgedeckt', 'Tagebuch-Eintraege'];
+    var kopf = ['Gruppe', 'Spielfigur', 'Punkte', 'Regionen aufgedeckt',
+                'Tagebuch-Eintraege', 'Symbole', 'Schloss geoeffnet'];
     var zeilen = [kopf.join(';')];
     zustand.gruppen.forEach(function (g) {
       var eintraege = 0;
@@ -343,10 +468,33 @@
         csvZitat(g.figurName),
         g.punkte,
         fortschritt(g),
-        eintraege
+        eintraege,
+        symbole(g).length,
+        g.schlossAuf ? 'ja' : 'nein'
       ].join(';'));
     });
     return zeilen.join('\r\n') + '\r\n';
+  }
+
+  /** Die Codekette — nur fuer die Lehrkraft. */
+  function lehrkraftUebersicht() {
+    var kette = REGIONEN.map(function (r, i) {
+      return {
+        position: i + 1,
+        region: r.name,
+        kuerzel: r.kuerzel,
+        symbol: r.symbol,
+        symbolName: r.symbol_name,
+        codeZumOeffnen: codeFuerRegion(r.id),
+        codeNaechste: r.code_naechste || ''
+      };
+    });
+    return {
+      startcode: STARTCODE,
+      startcodeText: (INHALTE && INHALTE.startcode_text) || '',
+      schlossCode: (INHALTE && INHALTE.schloss && INHALTE.schloss.code) || '',
+      kette: kette
+    };
   }
 
   /** Das Tagebuch als Text (zum Weitergeben oder Ausdruck). */
@@ -382,18 +530,24 @@
     FIGUREN: FIGUREN,
     PUNKTE: PUNKTE,
     STARTPUNKTE: STARTPUNKTE,
+    STARTCODE: STARTCODE,
     inhaltVersion: (INHALTE && INHALTE.version) || 'unbekannt',
     lade: function () { return zustand; },
     gruppen: function () { return zustand.gruppen; },
     aktivGruppe: function () { return zustand.aktivGruppe; },
     gruppeAnmelden: gruppeAnmelden,
     gruppeWaehlen: gruppeWaehlen,
+    codeEinloesen: codeEinloesen,
     frageBeantworten: frageBeantworten,
     tagebuchSpeichern: tagebuchSpeichern,
     tagebuchEintraege: tagebuchEintraege,
     richtigeInRegion: function (g, regionId) { return richtigeInRegion(g, regionId); },
     regionIstOffen: function (g, regionId) { return regionIstOffen(g, regionId); },
     fortschritt: function (g) { return fortschritt(g || aktiv()); },
+    symbole: function (g) { return symbole(g || aktiv()); },
+    schlossBereit: function (g) { return schlossBereit(g || aktiv()); },
+    schlossOeffnen: schlossOeffnen,
+    lehrkraftUebersicht: lehrkraftUebersicht,
     exportCSV: exportCSV,
     exportTagebuch: exportTagebuch,
     csvBlob: csvBlob,
