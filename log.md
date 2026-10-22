@@ -148,6 +148,54 @@ bearbeiten kann:
 - Geprueft im Browser: alle fuenf Aufgaben sichtbar, Loesungshinweis und Pruefkriterien
   aufklappbar, Spielablauf unveraendert.
 
+## [2026-10-22] lint | Ausfuehrliche Pruefung von Version 3
+- Pruefumfang: Logik-Tests in Node, Ende-zu-Ende im Browser (file:// und http://),
+  Randfaelle, Konsolenfehler, Persistenz, Export.
+
+### Logik-Tests (Node)
+- 60 von 60 Pruefungen bestanden (`node scripts/pruefe_logik.js`).
+- Geprueft: Anmeldung mit Figur, Figuren und Inhalte, falsche und richtige Antworten,
+  Punkte, Regionsaufdeckung, Fortschritt, Tagebuch (Abgabe und Aenderung), zwei Gruppen
+  mit getrenntem Stand, CSV- und Tagebuch-Export, Dateiverdrahtung, Reset.
+
+### Ende-zu-Ende im Browser
+- Zwei Gruppen angemeldet (Vulkanforscherin, Feldteam), 5 Figuren auswaehlbar.
+- Figur wandert auf der Karte mit: translate(120,180) / translate(500,150) / translate(660,300).
+- Alle fuenf Regionen durchgearbeitet, jede mit einem absichtlichen Fehlversuch:
+  Hinweis erscheint ("Nicht richtigt. Lies die Erklaerung und versuche es erneut."),
+  keine Punkte, Klick bleibt moeglich.
+- Gruppe A nach allen fuenf Regionen: 135 von 135 Punkten, Fortschritt 5/5,
+  fuenf Tagebuch-Eintraege, alle fuenf Regionen farbig gefuellt
+  (rgb(192,57,43), rgb(230,126,34), rgb(142,68,173), rgb(22,160,133), rgb(44,62,80)).
+- Gruppe B teilweise (nur Maar): 30 Punkte, Fortschritt 1/5, Stand von A unberuehrt.
+- CSV: "Gruppe A;Vulkanforscherin;135;5;5" und "Gruppe B;Feldteam;30;1;0".
+- Tagebuch-Text: Gruppenkopf, Regionsname, Frage, Antwort je Eintrag.
+
+### Randfaelle
+- Anmeldung ohne Figur: "Bitte eine Spielfigur waehlen."
+- Doppelter Gruppenname: "Dieser Gruppenname ist bereits vergeben."
+- Bereits richtige Frage erneut angeklickt: keine Doppelpunkte.
+- Tagebuch-Antwort zu kurz: Eintrag wird nicht gespeichert, Hinweis erscheint.
+- Aenderung einer gespeicherten Antwort: keine weiteren Punkte.
+- Wechsel zwischen Gruppen: Punkte und Fortschritt bleiben getrennt.
+
+### Fehler gefunden und behoben
+- Ein window.alert bei zu kurzer Tagebuch-Antwort blockierte den Browser. Ersetzt durch
+  eine einzeilige Meldung im Spiel. Commit a7902af.
+
+### Persistenz und Betrieb
+- localStorage funktioniert unter file:// und http://; nach localStorage.clear() und
+  Neuladen ist der Zustand leer.
+- Keine Konsolenfehler und keine Warnungen im gesamten Durchlauf.
+- Geladen werden nur noch die drei Skripte inhalte.js, logik.js, oberflaeche.js.
+- Karte bleibt inline im SVG, kein fetch(), kein Server noetig.
+
+### Offen
+- Alte Dateien der Version 2 (assets/spiel.js, assets/ui.js, assets/stationen.js,
+  data/stationen.json, scripts/pruefe_spiel.js) sind noch vorhanden, aber nicht mehr
+  eingebunden. Loeschen noch offen.
+- Balancing der 45 Minuten mit einer echten Klasse ist nicht geprueft.
+
 ## [2026-10-22] update | Spielidee umgebaut: Karte als Spielfeld (v3)
 - Ausgangspunkt: Rueckmeldung des Benutzers, dass die Aufgaben im Spiel nicht sichtbar
   waren (nur Stationsueberschriften), und der Verweis auf das LMZ GeoPortal.
