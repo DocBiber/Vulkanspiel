@@ -363,6 +363,13 @@
   }
 
   function init() {
+    // Versionsanzeige: Damit ist sofort erkennbar, ob der Browser die aktuelle
+    // Datei geladen hat. In Version 3 gibt es keine Kurzcodes mehr.
+    var anzeige = $('versionsanzeige');
+    if (anzeige) {
+      anzeige.textContent = 'Version ' + V.inhaltVersion + ' · ohne Kurzcodes';
+    }
+
     zeichneFigurwahl();
     $('gruppenAnmeldenBtn').addEventListener('click', meldeGruppeAn);
     $('gruppenName').addEventListener('keydown', function (ev) {

@@ -11,6 +11,8 @@
           border-bottom: 1px solid #243b53; padding-bottom: .75rem; margin-bottom: 1.25rem; }
   .kopf h1 { margin: 0; font-size: 1.5rem; }
   .kopf .untertitel { color: #9db4cc; }
+  .kopf .version { margin-left: auto; font-size: .8rem; color: #7ee2a8;
+                   border: 1px solid #2f5c46; border-radius: 999px; padding: .15rem .6rem; }
   .bereich { background: #111f31; border: 1px solid #243b53; border-radius: 12px;
              padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
   .bereich > h2 { font-size: 1.1rem; color: #dbe6f2; margin-bottom: .75rem; }
@@ -79,6 +81,7 @@
   <header class="kopf">
     <h1>Vulkanspiel</h1>
     <span class="untertitel">Sammelspiel zur physischen Geografie · LK Geografie · 45 Minuten</span>
+    <span class="version" id="versionsanzeige"></span>
   </header>
 
   <section class="bereich" aria-labelledby="anmeldungTitel">
@@ -94,8 +97,9 @@
 
   <section class="bereich" aria-labelledby="kartenTitel">
     <h2 id="kartenTitel">2 · Weltkarte der Vulkangebiete</h2>
-    <p class="hinweis">Kartenstuecke erscheinen, sobald eine Gruppe den passenden Kurzcode
-      eingibt. Der Code kommt von der Lehrkraft und wird nur nach Loesung der Station ausgegeben.</p>
+    <p class="hinweis">Klickt eine der fünf Regionen an. Jede richtig beantwortete Frage deckt
+      die Region farbig auf und bringt Punkte. Eure Spielfigur wandert zu jeder Region, die
+      ihr anklickt.</p>
     <div id="karte">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520" role="img"
            aria-label="Weltkarte der Vulkangebiete"
@@ -160,9 +164,10 @@
           <text x="668" y="330" class="regionslabel">LIP</text>
         </g>
 
+        <!-- Risiko liegt in Ostafrika, links neben dem Indien-Feld (LIP) -->
         <g id="piece-risiko" class="region" data-region="risiko" data-farbe="#2c3e50">
-          <path d="M640,300 L660,285 L675,310 L660,330 L640,320 Z" class="risiko-koerper"/>
-          <text x="640" y="352" class="regionslabel">RISIKO</text>
+          <path d="M555,310 L575,295 L590,320 L575,340 L555,330 Z" class="risiko-koerper"/>
+          <text x="568" y="362" class="regionslabel">RISIKO</text>
         </g>
 
         <!-- Spielfigur: wird per Klick auf eine Region dorthin gesetzt -->

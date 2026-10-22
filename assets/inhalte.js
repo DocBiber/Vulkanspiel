@@ -221,7 +221,7 @@ window.VULKAN_STATIONEN = {
       "name": "Nyiragongo und Goma",
       "svg_id": "piece-risiko",
       "farbe": "#2c3e50",
-      "figur": { "x": 660, "y": 300 },
+      "figur": { "x": 572, "y": 318 },
       "fragen": [
         {
           "id": "ris-1",
