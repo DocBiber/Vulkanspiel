@@ -222,6 +222,26 @@ bearbeiten kann:
   eingebunden. Loeschen noch offen.
 - Balancing der 45 Minuten mit einer echten Klasse ist nicht geprueft.
 
+## [2026-10-22] update | Zwei Fehler auf der Karte behoben, Versionsanzeige ergaenzt
+- Rueckmeldung des Benutzers: Nur vier Regionen sichtbar, keine Weltkarte,
+  Codes werden nicht ausgegeben.
+- Ursache 1 (echter Fehler): Die Regionsfelder LIP (x 635-735) und RISIKO
+  (x 616-675) lagen auf der Karte uebereinander. Sie wurden als ein Feld wahrgenommen.
+  RISIKO wurde nach links verschoben (x 544-593). Nach der Aenderung ueberlappen
+  keine der fuenf Regionen mehr, alle liegen klar getrennt.
+- Ursache 2 (echter Fehler): Der Hinweistext unter der Karte war noch aus Version 2
+  und sagte "Kartenstuecke erscheinen, sobald eine Gruppe den passenden Kurzcode
+  eingibt". In Version 3 gibt es keine Kurzcodes mehr — der Text war irrefuehrend.
+  Er beschreibt jetzt den Kartenablauf.
+- Ursache 3 (kein Fehler, aber wirksam): Der Browser hatte eine aeltere Version
+  im Cache. Um das erkennbar zu machen, erscheint oben rechts eine Versionsanzeige
+  ("Version 3.0.0 · ohne Kurzcodes"). Fehlt sie oder zeigt sie eine andere Nummer,
+  liegt eine alte Datei im Cache.
+- Geprueft: Regions-Boxen per getBBox() vermessen, Ueberlappungstest ueber alle
+  Paare (keine Ueberlappung mehr), Screenshot der Karte ausgewertet (fuenf getrennte
+  Felder), 60 Logik-Tests weiterhin bestanden.
+- Commit 0889a96.
+
 ## [2026-10-21] export | Auf GitHub übertragen
 - Repository: https://github.com/DocBiber/Vulkanspiel (öffentlich, Standardbranch `main`)
 - Angelegt mit `gh repo create --public --source=. --remote=origin --push`
