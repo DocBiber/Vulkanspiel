@@ -193,6 +193,35 @@ const svgBlock = html.slice(svgStart, html.indexOf('</svg>') + 6);
 pruefe('SVG hat viewBox und kein Script',
       svgBlock.indexOf('viewBox=') !== -1 && svgBlock.indexOf('<script') === -1);
 
+// Die Karte muss echte Geodaten enthalten, keine stilisierten Umrisse.
+pruefe('Karte enthaelt Landflaechen-Pfade',
+      /<g class="laender"><path d="([^"]{5000,})"/.test(svgBlock),
+      'Pfadlaenge: ' + ((/<g class="laender"><path d="([^"]+)"/.exec(svgBlock) || [])[1] || '').length);
+pruefe('Karte enthaelt Gradnetz (Aequator und Wendekreise)',
+      svgBlock.indexOf('class="aequator"') !== -1 &&
+      svgBlock.indexOf('class="wendekreis"') !== -1 &&
+      svgBlock.indexOf('class="nullmeridian"') !== -1);
+pruefe('Karte enthaelt Legende',
+      svgBlock.indexOf('class="legende"') !== -1 && svgBlock.indexOf('class="legendetext"') !== -1);
+
+// Regions-Positionen in der Karte muessen zu den Daten passen.
+pruefe('Regions-Positionen in der Karte stimmen mit den Daten ueberein',
+      inhalte.regionen.every(r => {
+        const kreis = new RegExp('id="' + r.svg_id + '"[\\s\\S]{0,200}?cx="' + r.figur.x + '"\\s+cy="' + r.figur.y + '"');
+        return kreis.test(svgBlock);
+      }),
+      inhalte.regionen.map(r => r.svg_id + '@' + r.figur.x + ',' + r.figur.y).join(' | '));
+
+pruefe('Jede Region liegt innerhalb der Kartenflaeche',
+      inhalte.regionen.every(r => r.figur.x > 0 && r.figur.x < 1000 && r.figur.y > 0 && r.figur.y < 500),
+      inhalte.regionen.map(r => Math.round(r.figur.x) + ',' + Math.round(r.figur.y)).join(' | '));
+
+pruefe('Keine zwei Regionen liegen an derselben Stelle',
+      (() => {
+        const positionen = inhalte.regionen.map(r => r.figur.x + ',' + r.figur.y);
+        return new Set(positionen).size === positionen.length;
+      })());
+
 console.log('\n[9] Reset');
 V.reset();
 pruefe('Nach Reset keine Gruppen', V.gruppen().length === 0);

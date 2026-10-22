@@ -29,14 +29,35 @@ Antwort deckt eine Region auf. Dazu gibt es Punkte, einen Wettbewerb, einen Fort
 
 | Datei | Inhalt |
 |---|---|
-| `index.html` | Oberfläche (Karte inline als SVG, Regionen, Fragen, Tagebuch, Export) |
+| `index.html` | Oberfläche (Weltkarte inline als SVG, Regionen, Fragen, Tagebuch, Export) |
 | `assets/inhalte.js` | **Inhalte**: Regionen, Multiple-Choice-Fragen, Tagebuch-Fragen, Spielfiguren |
+| `assets/weltkarte.txt` | Land-Pfade der Weltkarte (aus Natural Earth erzeugt) |
 | `assets/logik.js` | Logik: Gruppen, Figuren, Fragen, Punkte, Fortschritt, Tagebuch, Export |
 | `assets/oberflaeche.js` | Oberfläche: Anmeldung, Karte, Regionsbereich, Tagebuch, Auswertung |
 | `assets/style.css` | Basis-Styles |
+| `scripts/weltkarte_bauen.py` | Erzeugt die Land-Pfade aus Natural Earth (Public Domain) |
+| `scripts/karte_bauen.py` | Baut die Karte und bindet sie in `index.html` ein |
+| `scripts/ne_110m_land.geojson` | Rohdaten der Weltkarte (Natural Earth 110m, Public Domain) |
 | `REGELN.md` | Spielregeln für Lehrkraft und Schüler |
 | `scripts/pruefe_logik.js` | Testlauf der Logik (`node scripts/pruefe_logik.js`) |
 | `log.md` | Änderungsjournal |
+
+Die Weltkarte ist keine Zeichnung, sondern echte Geodaten: Natural Earth 110m
+(Public Domain). `scripts/weltkarte_bauen.py` wandelt die Land-Pfade in eine
+Äquator-Entfernung um, `scripts/karte_bauen.py` setzt daraus die Karte zusammen
+(Gradnetz, Regionen, Figur, Legende) und bindet sie in `index.html` ein. Die
+Karte muss inline stehen, weil ein externes SVG unter `file://` nicht per
+`fetch()` geladen werden kann.
+
+Die Regionen liegen an geografisch korrekten Stellen:
+
+| Region | Ort | Koordinaten |
+|---|---|---|
+| SUB | Anden, Peru-Chile | 75° W, 15° S |
+| HOT | Hawaii | 155° W, 20° N |
+| MAAR | Eifel | 7° O, 50° N |
+| LIP | Deccan-Trapp, Indien | 76° O, 19° N |
+| RISIKO | Nyiragongo, DR Kongo | 29° O, 1,5° S |
 
 Die Inhalte liegen in `assets/inhalte.js`, die Weltkarte ist als SVG direkt in `index.html`
 eingebettet. Beides wird per `<script src>` beziehungsweise inline eingebunden und nicht

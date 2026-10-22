@@ -76,6 +76,25 @@ Die Fragen und Erklärungen beruhen auf dem Geografie-Wiki des Projekts
 ([GeoWiki](https://github.com/DocBiber/GeoWiki)): Vulkanarten, Vulkanprozesse,
 Vulnerabilitäts-Begriffe und Raumbeispiele.
 
+## Weltkarte
+
+Die Karte ist keine Zeichnung, sondern echte Geodaten: **Natural Earth 110m**
+([naturalearthdata.com](https://www.naturalearthdata.com/)), Public Domain.
+
+    scripts/weltkarte_bauen.py   Land-Pfade aus dem GeoJSON projizieren
+    scripts/karte_bauen.py       Karte bauen und in index.html einbinden
+    scripts/ne_110m_land.geojson Rohdaten (138 KB)
+
+Die Regionen liegen an geografisch korrekten Orten:
+
+| Region | Ort | Koordinaten |
+|---|---|---|
+| SUB | Anden, Peru-Chile | 75° W, 15° S |
+| HOT | Hawaii | 155° W, 20° N |
+| MAAR | Eifel | 7° O, 50° N |
+| LIP | Deccan-Trapp, Indien | 76° O, 19° N |
+| RISIKO | Nyiragongo, DR Kongo | 29° O, 1,5° S |
+
 ## Mitmachen
 
 Fehler oder Verbesserungen gern als Issue oder Pull Request. Die Fragen und Tagebuchfragen

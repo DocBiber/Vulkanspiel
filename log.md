@@ -242,6 +242,37 @@ bearbeiten kann:
   Felder), 60 Logik-Tests weiterhin bestanden.
 - Commit 0889a96.
 
+## [2026-10-22] update | Echte Weltkarte aus Natural Earth gebaut
+- Rueckmeldung des Benutzers: Fuenf Gebiete seien da, aber es sei keine Weltkarte.
+- Zutreffend: Das SVG war eine Zeichnung — stilisierte Kontinenten-Umrisse mit
+  Koordinatenlinien, keine erkennbare Weltkarte.
+- Loesung: Echte Geodaten. Natural Earth 110m (Public Domain) als
+  ne_110m_land.geojson geladen (138 KB, 127 Land-Objekte).
+- Neues Skript scripts/weltkarte_bauen.py: Projiziert die Laender in eine
+  Aequator-Entfernung auf 1000 x 500 Pixel, Ausgabe assets/weltkarte.txt
+  (58.239 Zeichen Pfadtext).
+- Neues Skript scripts/karte_bauen.py: Baut daraus die Karte (Ozean, Gradnetz mit
+  Aequator und Wendekreisen, Landflaechen, fuenf Regions-Marker, Spielfigur,
+  Legende) und bindet sie inline in index.html ein. Liest die Regionspositionen
+  aus assets/inhalte.js, damit Karte und Logik nicht auseinanderlaufen.
+- Regionspositionen auf geografisch korrekte Orte gesetzt:
+  SUB Anden (291,7 / 291,7), HOT Hawaii (69,4 / 194,4), MAAR Eifel (519,4 / 110,6),
+  LIP Deccan (711,1 / 197,2), RISIKO Nyiragongo (581,1 / 254,2).
+- Fehler beim ersten Versuch: Der Ausdruck zum Einlesen der Regionsdaten griff in
+  die Figurenliste und vergab der ersten Region data-region="vulkan". Durch
+  Verankerung an "nr" behoben.
+- Fehler beim ersten Versuch: Die SVG-Elemente bekamen die Regions-ID statt der
+  svg_id, die Logik fand sie dann nicht. Behoben.
+- Geprueft: Screenshot ausgewertet — Kontinente erkennbar, Gradnetz mit Aequator
+  und Wendekreisen, fuenf Regionen an korrekten Stellen. Alle fuenf Regionen
+  aufgedeckt: 110 Punkte, Fortschritt 5/5, Farben korrekt, Figur wandert zu jeder
+  Region. Keine Konsolenfehler.
+- 66 Logik-Tests bestanden, darunter neu: Landflaechen-Pfade vorhanden, Gradnetz
+  vorhanden, Legende vorhanden, Regionspositionen stimmen mit den Daten ueberein,
+  Regionen liegen innerhalb der Kartenflaeche, keine zwei Regionen an derselben Stelle.
+- index.html ist jetzt 68 KB (davon 58 KB Landpfade). Bleibt eine einzige Datei,
+  laeuft weiterhin ohne Server.
+
 ## [2026-10-21] export | Auf GitHub übertragen
 - Repository: https://github.com/DocBiber/Vulkanspiel (öffentlich, Standardbranch `main`)
 - Angelegt mit `gh repo create --public --source=. --remote=origin --push`

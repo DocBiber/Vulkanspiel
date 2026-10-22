@@ -41,7 +41,7 @@ window.VULKAN_STATIONEN = {
       "name": "Subduktionszonen des Pazifiks",
       "svg_id": "piece-subduktion",
       "farbe": "#c0392b",
-      "figur": { "x": 120, "y": 180 },
+      "figur": { "x": 291.7, "y": 291.7 },
       "fragen": [
         {
           "id": "sub-1",
@@ -86,7 +86,7 @@ window.VULKAN_STATIONEN = {
       "name": "Hawaii-Hot-Spot",
       "svg_id": "piece-hotspot",
       "farbe": "#e67e22",
-      "figur": { "x": 150, "y": 330 },
+      "figur": { "x": 69.4, "y": 194.4 },
       "fragen": [
         {
           "id": "hot-1",
@@ -131,7 +131,7 @@ window.VULKAN_STATIONEN = {
       "name": "Maar-Feld der Eifel",
       "svg_id": "piece-maar",
       "farbe": "#8e44ad",
-      "figur": { "x": 500, "y": 150 },
+      "figur": { "x": 519.4, "y": 110.6 },
       "fragen": [
         {
           "id": "maar-1",
@@ -176,7 +176,7 @@ window.VULKAN_STATIONEN = {
       "name": "Deccan-Trapp, Indien",
       "svg_id": "piece-lip",
       "farbe": "#16a085",
-      "figur": { "x": 680, "y": 320 },
+      "figur": { "x": 711.1, "y": 197.2 },
       "fragen": [
         {
           "id": "lip-1",
@@ -221,7 +221,7 @@ window.VULKAN_STATIONEN = {
       "name": "Nyiragongo und Goma",
       "svg_id": "piece-risiko",
       "farbe": "#2c3e50",
-      "figur": { "x": 572, "y": 318 },
+      "figur": { "x": 581.1, "y": 254.2 },
       "fragen": [
         {
           "id": "ris-1",
