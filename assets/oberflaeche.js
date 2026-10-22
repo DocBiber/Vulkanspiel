@@ -205,7 +205,17 @@
     var feld = $('tagebuch-' + frageId);
     var ergebnis = V.tagebuchSpeichern(regionId, frageId, feld ? feld.value : '');
     if (!ergebnis.ok) {
-      window.alert(ergebnis.fehler);
+      // Einzeilige Meldung im Spiel statt eines Dialogs: Ein alert blockiert den
+      // Browser und stoppt damit auch die Klasse mitten in der Stunde.
+      var box = $('regionsbereich');
+      var hinweis = $('tagebuch-hinweis');
+      if (!hinweis) {
+        hinweis = document.createElement('p');
+        hinweis.id = 'tagebuch-hinweis';
+        hinweis.className = 'hinweis';
+        box.insertBefore(hinweis, box.firstChild);
+      }
+      hinweis.textContent = ergebnis.fehler;
       return;
     }
     zeichne();
