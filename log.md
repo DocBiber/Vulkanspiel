@@ -133,6 +133,32 @@ bearbeiten kann:
 - Kein Eintrag im Wiki-Log vorgenommen: Das Spiel ist ein eigenes Projekt, das Wiki
   bleibt Inhaltsquelle.
 
+## [2026-10-22] update | Aufgaben werden in der Oberfläche angezeigt
+- Fehler: Die Aufgaben lagen in data/stationen.json, aber die Oberfläche nutzte eine
+  hartkodierte Liste ohne Aufgabentext. fetch() scheitert zudem unter file://.
+  Im Spiel waren also nur Stationsueberschriften zu sehen, keine Aufgaben.
+- Loesung: Neue Datei assets/stationen.js mit den Aufgaben. Sie wird per
+  <script src> eingebunden und nicht per fetch() geladen, laeuft also auch unter file://.
+- Die Oberfläche zeigt jetzt je Station den Auftrag, Ort, Zeit und Thema.
+  Loesungshinweis, Pruefkriterien und typische Fehler stehen in einem aufklappbaren
+  Abschnitt nur fuer die Lehrkraft.
+- data/stationen.json bleibt als lesbare Kopie erhalten. Der Test vergleicht beide
+  Dateien und schlaegt fehl, sobald sie auseinanderlaufen.
+- 60 Logik-Tests bestanden (`node scripts/pruefe_spiel.js`).
+- Geprueft im Browser: alle fuenf Aufgaben sichtbar, Loesungshinweis und Pruefkriterien
+  aufklappbar, Spielablauf unveraendert.
+
+## [2026-10-22] query | Referenz-Design LMZ GeoPortal untersucht
+- Quelle: https://geo.lmz-bw.de/gu/vegetation/#/ (Quasar/Vue, MapLibre GL)
+- Aufbau: Weltkarte als Spielfeld, Spielfelder anklicken, Spielfigur (3D-Hund),
+  Namenseingabe, Spielstand, Tagebuch, Sound
+- Tagebuch mit 12 offenen, reflektierenden Fragen, keine Richtig/Falsch-Fragen
+- Bildergalerie mit Erlaeuterungen je Vegetationszone (images.json)
+- Keine Punkte, keine Lehrkraft-Freigabe, kein Wettbewerb
+- Abweichung vom Vulkanspiel: Bei LMZ ist die Karte das Spielfeld und das Tagebuch
+  sammelt Freitext. Beim Vulkanspiel sind Stationen im Klassenraum und die Lehrkraft
+  gibt die Loesung frei. Uebernehmen oder beibehalten ist noch offen.
+
 ## [2026-10-21] export | Auf GitHub übertragen
 - Repository: https://github.com/DocBiber/Vulkanspiel (öffentlich, Standardbranch `main`)
 - Angelegt mit `gh repo create --public --source=. --remote=origin --push`

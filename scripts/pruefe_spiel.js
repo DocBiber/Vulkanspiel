@@ -11,6 +11,22 @@ const ROOT = path.resolve(__dirname, '..');
 const spielSrc = fs.readFileSync(path.join(ROOT, 'assets', 'spiel.js'), 'utf8');
 const stationenJson = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'stationen.json'), 'utf8'));
 
+/**
+ * Laedt assets/stationen.js und gibt das enthaltene Datenobjekt zurueck.
+ * Die Datei ist eine reine JavaScript-Datei (kein JSON), weil sie per
+ * <script src> eingebunden und nicht per fetch() geladen wird.
+ */
+function ladeStationenJs() {
+  const quelle = fs.readFileSync(path.join(ROOT, 'assets', 'stationen.js'), 'utf8');
+  const sandbox = { window: {} };
+  vm.createContext(sandbox);
+  vm.runInContext(quelle, sandbox, { filename: 'stationen.js' });
+  return sandbox.window.VULKAN_STATIONEN;
+}
+
+const stationenJs = ladeStationenJs();
+const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+
 function baueUmgebung() {
   const store = {};
   const localStorage = {
@@ -20,10 +36,11 @@ function baueUmgebung() {
     clear: () => { for (const k of Object.keys(store)) delete store[k]; },
   };
   const knoten = {};
-  stationenJson.kartenstuecke.forEach((k) => { knoten[k.svg_id] = { opacity: '0', klassen: new Set() }; });
+  stationenJs.kartenstuecke.forEach((k) => { knoten[k.svg_id] = { opacity: '0', klassen: new Set() }; });
 
   const sandbox = {
     console, localStorage, setTimeout,
+    VULKAN_STATIONEN: stationenJs,
     Blob: class { constructor(t) { this.teile = t; } },
     URL: { createObjectURL: () => 'blob:test', revokeObjectURL() {} },
     document: {
@@ -134,15 +151,40 @@ pruefe('CSV markiert Begruendung mit ja/nein',
 
 console.log('\n[8] Datendateien');
 pruefe('5 Stationen in stationen.json', stationenJson.stationen.length === 5);
+pruefe('5 Stationen in stationen.js', stationenJs.stationen.length === 5);
 pruefe('Jede Station hat Auftrag, Loesungshinweis und 3+ Pruefkriterien',
-      stationenJson.stationen.every(s => s.auftrag && s.loesungshinweis && s.pruefkriterien.length >= 3));
+      stationenJs.stationen.every(s => s.auftrag && s.loesungshinweis && s.pruefkriterien.length >= 3));
+pruefe('Jede Station hat Ort, Thema und Zeitangabe',
+      stationenJs.stationen.every(s => s.ort && s.thema && s.zeit_minuten > 0));
+pruefe('Jede Station nennt mindestens eine Quelle',
+      stationenJs.stationen.every(s => Array.isArray(s.quellen) && s.quellen.length >= 1));
+pruefe('stationen.js und stationen.json sind gleich (Abgleich der Aufträge)',
+      JSON.stringify(stationenJs.stationen.map(s => [s.id, s.auftrag])) ===
+      JSON.stringify(stationenJson.stationen.map(s => [s.id, s.auftrag])));
+
+// Die Daten muessen das Spiel auch wirklich steuern, nicht nur daneben liegen.
+const aktiveStationen = V.STATIONEN;
+pruefe('Spiel nutzt die Daten aus stationen.js (Auftrag vorhanden)',
+      aktiveStationen.length === stationenJs.stationen.length &&
+      aktiveStationen.every(st => st.auftrag && st.auftrag.length > 20),
+      JSON.stringify(aktiveStationen.map(st => st.auftrag ? st.auftrag.length : 'fehlt')));
+pruefe('Spiel nutzt die Kartenstueck-IDs aus den Daten',
+      aktiveStationen.every(st => stationenJs.kartenstuecke.some(k => k.svg_id === st.svg)),
+      JSON.stringify(aktiveStationen.map(st => st.svg)));
+pruefe('stationenDaten() liefert die Rohdaten',
+      V.stationenDaten() && V.stationenDaten().stationen.length === 5);
+pruefe('index.html bindet stationen.js vor spiel.js ein',
+      (() => {
+        const i = html.indexOf('src="assets/stationen.js"');
+        const j = html.indexOf('src="assets/spiel.js"');
+        return i !== -1 && j !== -1 && i < j;
+      })());
 pruefe('Jede Station hat ein Kartenstueck',
       stationenJson.stationen.every(s => stationenJson.kartenstuecke.some(k => k.id === s.kartenstueck)));
 pruefe('Jedes Kartenstueck hat Farbe und Hinweis',
       stationenJson.kartenstuecke.every(k => k.farbe && k.hinweis && k.svg_id));
 pruefe('Stationen und Kartenstuecke stimmen ueberein (Anzahl)',
       stationenJson.stationen.length === stationenJson.kartenstuecke.length);
-const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 pruefe('SVG enthaelt alle Stueck-IDs aus den Daten',
       stationenJson.kartenstuecke.every(k => html.indexOf('id="' + k.svg_id + '"') !== -1),
       stationenJson.kartenstuecke.map(k => k.svg_id).join(', '));

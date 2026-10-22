@@ -106,6 +106,8 @@ Höchstpunktzahl pro Gruppe: 5 Stationen × 18 Punkte + 10 Startpunkte = 100.
 - Keine Installation, kein Server, kein Internet.
 - Die Weltkarte ist als SVG direkt in `index.html` eingebettet, funktioniert also
   auch per Doppelklick ohne Server.
+- Die Aufgaben liegen in `assets/stationen.js` und werden per `<script src>` geladen,
+  ebenfalls ohne `fetch`.
 - Die Punkte werden im Browser gespeichert (localStorage).
 - Am Ende der Stunde wird die Punkteübersicht als CSV-Datei exportiert
   (Semikolon-getrennt, UTF-8 mit BOM für Excel).

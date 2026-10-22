@@ -23,6 +23,13 @@
   .gruppenliste .fortschritt { color: #9db4cc; margin-left: auto; }
   .station { border-top: 1px solid #243b53; padding: .85rem 0; }
   .station.erledigt { background: #0f2418; border-radius: 8px; padding: .85rem; margin: .4rem 0; }
+  .auftrag { background: #0a1622; border-left: 4px solid #7ee2a8; border-radius: 0 8px 8px 0;
+             padding: .7rem .9rem; margin: .6rem 0; font-size: 1.02rem; }
+  .ort { color: #9db4cc; font-size: .88rem; margin: 0 0 .6rem; }
+  .lehrerdetails { margin: .6rem 0; color: #a8c0d8; font-size: .92rem; }
+  .lehrerdetails summary { cursor: pointer; color: #ffd28a; }
+  .lehrerdetails ul { margin: .4rem 0 .4rem 1.2rem; }
+  .lehrerdetails p { margin: .4rem 0; }
   .lehrerblock, .codeblock { display: flex; flex-wrap: wrap; gap: .5rem .9rem; align-items: center;
                               margin-top: .5rem; }
   .lehrerblock { color: #a8c0d8; }
@@ -155,7 +162,7 @@
   </section>
 
   <section class="bereich" aria-labelledby="stationenTitel">
-    <h2 id="stationenTitel">3 · Stationen freigeben und Codes einloesen</h2>
+    <h2 id="stationenTitel">3 · Stationen: Aufgaben, Freigabe, Codes</h2>
     <div id="stationenListe"></div>
   </section>
 
@@ -170,6 +177,7 @@
   </p>
 </div>
 
+<script src="assets/stationen.js"></script>
 <script src="assets/spiel.js"></script>
 <script src="assets/ui.js"></script>
 </body>

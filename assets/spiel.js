@@ -18,13 +18,50 @@
 
   var SPEICHER_KEY = 'vulkanspiel.v2';
 
-  var STATIONEN = [
-    { id: 1, kuerzel: 'SUB', titel: 'Vulkanismus an Subduktionszonen', stueck: 'subduktionszone_pazifik', svg: 'piece-subduktion' },
-    { id: 2, kuerzel: 'HOT', titel: 'Schildvulkane und Hot Spots', stueck: 'hotspot_hawaii', svg: 'piece-hotspot' },
-    { id: 3, kuerzel: 'MAAR', titel: 'Maare und Vulkanfelder', stueck: 'maar_eifel', svg: 'piece-maar' },
-    { id: 4, kuerzel: 'LIP', titel: 'Vulkanische Decken (LIPs)', stueck: 'lip_deccan', svg: 'piece-lip' },
-    { id: 5, kuerzel: 'RISIKO', titel: 'Risiko und Vulnerabilitaet', stueck: 'risiko_nyiragongo', svg: 'piece-risiko' }
+  // Fallback-Liste, falls assets/stationen.js nicht geladen werden konnte.
+  var STATIONEN_FALLBACK = [
+    { id: 1, kuerzel: 'SUB',    titel: 'Vulkanismus an Subduktionszonen', svg: 'piece-subduktion' },
+    { id: 2, kuerzel: 'HOT',    titel: 'Schildvulkane und Hot Spots',    svg: 'piece-hotspot' },
+    { id: 3, kuerzel: 'MAAR',   titel: 'Maare und Vulkanfelder',         svg: 'piece-maar' },
+    { id: 4, kuerzel: 'LIP',    titel: 'Vulkanische Decken (LIPs)',      svg: 'piece-lip' },
+    { id: 5, kuerzel: 'RISIKO', titel: 'Risiko und Vulnerabilitaet',     svg: 'piece-risiko' }
   ];
+
+  /**
+   * Liest die Stationsdaten aus assets/stationen.js. Diese Datei wird per
+   * <script src> eingebunden und nicht per fetch(), damit das Spiel auch
+   * unter file:// laeuft. Fehlt die Datei, wird die Fallback-Liste genutzt.
+   */
+  function stationenLaden() {
+    var roh = (typeof window !== 'undefined' && window.VULKAN_STATIONEN) || null;
+    if (!roh || !roh.stationen || !roh.stationen.length) return null;
+    var stuecke = {};
+    (roh.kartenstuecke || []).forEach(function (k) { stuecke[k.station] = k; });
+    return roh.stationen.map(function (s) {
+      var stueck = stuecke[s.id] || {};
+      return {
+        id: s.id,
+        kuerzel: s.kuerzel,
+        titel: s.titel,
+        svg: stueck.svg_id || ('piece-' + s.id),
+        auftrag: s.auftrag || '',
+        loesungshinweis: s.loesungshinweis || '',
+        pruefkriterien: s.pruefkriterien || [],
+        moegliche_fehler: s.moegliche_fehler || [],
+        ort: s.ort || '',
+        thema: s.thema || '',
+        zeit_minuten: s.zeit_minuten || 0,
+        kompetenz: s.kompetenz || [],
+        quellen: s.quellen || []
+      };
+    });
+  }
+
+  /** Die aktuell gueltige Stationsliste (Daten aus stationen.js, sonst Fallback). */
+  var STATIONEN = stationenLaden() || STATIONEN_FALLBACK;
+
+  /** Rohe Stationsdaten (inkl. Auftrag, Loesungshinweis, Pruefkriterien). */
+  var STATIONEN_DATEN = (typeof window !== 'undefined' && window.VULKAN_STATIONEN) || null;
 
   var PUNKTE = {
     STATION_GELEST: 10,
@@ -288,6 +325,8 @@
     PUNKTE: PUNKTE,
     ALPHABET: ALPHABET,
     CODE_LEN: CODE_LEN,
+    stationen: function () { return STATIONEN; },
+    stationenDaten: function () { return STATIONEN_DATEN; },
     lade: function () { return zustand; },
     gruppen: function () { return zustand.gruppen; },
     aktivGruppe: function () { return zustand.aktivGruppe; },

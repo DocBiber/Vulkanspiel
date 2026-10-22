@@ -26,18 +26,25 @@ Eine Runde: 45 Minuten, 5 Gruppen, 5 Stationen.
 | Datei | Inhalt |
 |---|---|
 | `index.html` | Oberfläche (Karte inline als SVG, Stationen, Punkte, Export) |
-| `assets/style.css` | Basis-Styles |
+| `assets/stationen.js` | **Aufgaben**: Auftrag, Lösungshinweis, Prüfkriterien je Station |
 | `assets/spiel.js` | Spiel-Logik: Gruppen, Punkte, Codes, CSV |
 | `assets/ui.js` | Oberfläche: Anmeldung, Stationen, Karte, Export |
+| `assets/style.css` | Basis-Styles |
+| `data/stationen.json` | Lesbare Kopie der Aufgaben (der Test prüft die Gleichheit) |
 | `REGELN.md` | Spielregeln für Lehrkraft und Schüler |
-| `data/stationen.json` | Aufgaben, Lösungshinweise, Prüfkriterien |
 | `scripts/pruefe_spiel.js` | Testlauf der Logik (`node scripts/pruefe_spiel.js`) |
 | `log.md` | Änderungsjournal |
 
-Die Karte liegt als SVG direkt in `index.html` (Abschnitt „Weltkarte der Vulkangebiete").
-Damit funktioniert das Spiel auch per Doppelklick über `file://` — ohne Server, ohne
-`fetch`. Eine externe SVG-Datei würde unter `file://` nicht geladen und die
-Kartenstücke blieben unsichtbar.
+Die Aufgaben liegen in `assets/stationen.js`. Sie werden per `<script src>` eingebunden
+und nicht per `fetch()` geladen — dadurch funktioniert das Spiel auch per Doppelklick
+über `file://`. Die Oberfläche zeigt den Auftrag jeder Station an; Lösungshinweis und
+Prüfkriterien stehen in einem aufklappbaren Abschnitt für die Lehrkraft.
+
+`data/stationen.json` ist eine lesbare Kopie derselben Aufgaben. Der Test
+`scripts/pruefe_spiel.js` vergleicht beide Dateien und schlägt fehl, sobald sie
+auseinanderlaufen.
+
+Die Weltkarte ist als SVG direkt in `index.html` eingebettet, ebenfalls wegen `file://`.
 
 ## Stationen im Überblick
 

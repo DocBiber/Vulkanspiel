@@ -143,6 +143,15 @@
       html += '<section class="station' + (e ? ' erledigt' : '') + '">' +
         '<h3>Station ' + st.id + ' · ' + esc(st.titel) + '</h3>';
 
+      // Der Auftrag ist der eigentliche Inhalt der Station und gehoert immer ins Bild.
+      if (st.auftrag) {
+        html += '<p class="auftrag">' + esc(st.auftrag) + '</p>';
+      }
+      if (st.ort) {
+        html += '<p class="ort">' + esc(st.ort) + ' · ' + (st.zeit_minuten || '—') +
+          ' Minuten · ' + esc(st.thema) + '</p>';
+      }
+
       if (e) {
         html += '<p class="ok">Abgeschlossen: ' + e.punkte + ' Punkte' +
           (e.begruendung ? ' · Begruendung vollstaendig' : '') +
@@ -160,6 +169,21 @@
           '<button type="button" data-station="' + st.id + '" class="freigabe">Station freigeben (+' + V.PUNKTE.STATION_GELEST + ')</button>' +
           '<span class="fehler" id="stationFehler-' + st.id + '"></span>' +
           '</div>';
+
+        // Loesungshinweis und Pruefkriterien sind nur fuer die Lehrkraft bestimmt.
+        if (st.loesungshinweis) {
+          html += '<details class="lehrerdetails"><summary>Loesungshinweis und Pruefkriterien</summary>' +
+            '<p>' + esc(st.loesungshinweis) + '</p>';
+          if (st.pruefkriterien.length) {
+            html += '<ul>' + st.pruefkriterien.map(function (k) {
+              return '<li>' + esc(k) + '</li>';
+            }).join('') + '</ul>';
+          }
+          if (st.moegliche_fehler.length) {
+            html += '<p class="fehler">Typische Fehler: ' + st.moegliche_fehler.map(esc).join(' · ') + '</p>';
+          }
+          html += '</details>';
+        }
       }
 
       // Das Eingabefeld bleibt nach der Freigabe bestehen, bis das Stueck offen ist.
