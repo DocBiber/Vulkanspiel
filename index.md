@@ -64,12 +64,18 @@ folgen mit der Bewertung. Zwei Wege:
 
 ## Die Codekette
 
-    Zettel → ASCHE → Station 1 → FUNKEN → Station 2 → WELLE → Station 3
-          → TROPFEN → Station 4 → DECKE → Station 5 → fünftes Symbol → Schloss
+Die Gruppen arbeiten parallel. Jede bekommt einen Zettel mit einem Aufdruck und
+dem Namen einer Station; die Kette läuft von dort zyklisch weiter.
 
-Die Aufdrucke stehen in `assets/inhalte.js` (`startcode`, `code_naechste`, `schloss.code`)
-und lassen sich dort ändern. Die Lehrkraft sieht alle Aufdrücke über
-„Lehrkraft: Codes anzeigen“ im Abschnitt Auswertung.
+    SUB    Anfang: ASCHE    gelöst → FUNKEN
+    HOT    Anfang: FUNKEN   gelöst → WELLE
+    MAAR   Anfang: WELLE    gelöst → TROPFEN
+    LIP    Anfang: TROPFEN  gelöst → DECKE
+    RISIKO Anfang: DECKE    gelöst → ASCHE
+
+Die Aufdrücke stehen in `assets/inhalte.js` (`startcodes`, `code_naechste`,
+`schloss.code`) und lassen sich dort ändern. Die Lehrkraft sieht alle Aufdrücke
+über „Lehrkraft: Codes anzeigen“ im Abschnitt Auswertung.
 
 ## Dateien
 
@@ -133,23 +139,24 @@ per `fetch()` geladen — dadurch funktioniert das Spiel auch per Doppelklick ü
 - [x] Codekette: Startcode auf dem Zettel, jeder gelöste Station liefert den Folgencode
 - [x] Symbole pro Station und Schloss mit Bonuspunkten und Abschluss-Code
 - [x] Lehrkraft-Übersicht zeigt alle Aufdrücke
-- [x] Aufgabentypen-System: sieben Typen mit eigenen Prüffunktionen
+- [x] Parallele Startweise: jede Gruppe wählt eine Startstation, der Aufdruck muss
+      dazu passen, die Kette läuft zyklisch von dort weiter
 - [x] Fünf Aufgaben pro Station, unterschiedlich je Station
+- [x] Aufgabentypen-System: sieben Typen mit eigenen Prüffunktionen
 - [x] Skizzen als SVG (erste: Schichtvulkan im Querschnitt)
 - [x] Freitext-Bewertung über eine Bewertungsdatei (Weg B) — Import und Export
 - [x] CSV: neun Spalten inkl. gelöster Aufgaben und bewerteter Freitexte
-- [x] 181 Prüfungen bestanden (94 Kette + 87 Aufgaben)
-- [x] Ende-zu-Ende-Durchlauf im Browser: alle fünf Typen gelöst, Station offen,
-      Symbol frei, Bewertungsdatei eingelesen, keine Konsolenfehler
+- [x] 197 Prüfungen bestanden (110 Kette + 87 Aufgaben)
+- [x] Ende-zu-Ende im Browser: paralleler Start am Hot-Spot, falscher Aufdruck
+      abgelehnt, Station gelöst, Aufdruck zum nächsten, keine Konsolenfehler
 - [ ] Weg A: lokaler Bewertungsdienst (benötigt API-Schlüssel und ein laufendes Skript)
 - [ ] Die übrigen vier Stationen mit den neuen Aufgabentypen füllen
 - [ ] Balancing mit einer echten Klasse prüfen
 
 ## Nächster Schritt
 
-Station 2 bis 5 mit den neuen Aufgabentypen füllen. Station 1 ist der Prototyp:
-sie zeigt, wie die fünf Aufgaben nebeneinander stehen und wie die Station erst
-nach allen fünf aufgedeckt wird. Danach das Zeitbalancing — 45 Minuten reichen
-für fünf Stationen à fünf Aufgaben nur, wenn die Gruppen wirklich in der
-Kartenreihenfolge arbeiten.
+Station 2 bis 5 mit den neuen Aufgabentypen füllen. Dazu braucht es vier weitere
+Skizzen: Hot-Spot mit Inselkette, Maar, Decken-Schichten, Risikomodelle. Die
+Gruppen arbeiten parallel, deshalb entfällt der Zeitdruck, der bei einer festen
+Reihenfolge bestanden hätte — jede Gruppe läuft ihre eigene Kette durch.
 

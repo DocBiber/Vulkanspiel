@@ -12,9 +12,10 @@
     return V.gruppen().filter(function (g) { return g.name === V.aktivGruppe(); })[0];
   }
 
-  // ---------- Start: Name und Spielfigur ----------
+  // ---------- Start: Name, Spielfigur und Startstation ----------
 
   var gewaehlteFigur = null;
+  var gewaehlteStation = null;
 
   function figurWaehlen(id) {
     gewaehlteFigur = id;
@@ -35,8 +36,34 @@
     });
   }
 
+  /**
+   * Die fuenf Startstationen. Jede Gruppe darf an einer beliebigen Station
+   * anfangen; der Aufdruck auf dem Zettel muss zu dieser Station passen.
+   */
+  function zeichneStationswahl() {
+    var box = $('stationswahl');
+    if (!box) return;
+    box.innerHTML = '<p class="hinweis">Auf eurem Zettel steht der Name einer Station. ' +
+      'Sucht sie auf der Karte und waehlt sie hier aus — dann tragt ihr den Aufdruck ein.</p>' +
+      '<div class="stationswahl-liste">' + V.REGIONEN.map(function (r) {
+        return '<button type="button" data-station="' + esc(r.id) + '">' +
+          '<span class="symbol">' + esc(r.symbol) + '</span>' +
+          '<span class="name">' + esc(r.name) + '</span>' +
+          '<span class="kuerzel">' + esc(r.kuerzel) + '</span></button>';
+      }).join('') + '</div>';
+    box.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        gewaehlteStation = b.getAttribute('data-station');
+        box.querySelectorAll('button').forEach(function (x) {
+          x.classList.toggle('gewaehlt', x.getAttribute('data-station') === gewaehlteStation);
+        });
+      });
+    });
+  }
+
   function meldeGruppeAn() {
-    var ergebnis = V.gruppeAnmelden($('gruppenName').value, gewaehlteFigur, $('startcode').value);
+    var ergebnis = V.gruppeAnmelden($('gruppenName').value, gewaehlteFigur,
+      $('startcode').value, gewaehlteStation);
     if (!ergebnis.ok) {
       $('anmeldungFehler').textContent = ergebnis.fehler;
       return;
@@ -44,6 +71,7 @@
     $('anmeldungFehler').textContent = '';
     $('gruppenName').value = '';
     $('startcode').value = '';
+    gewaehlteStation = null;
     zeichne();
   }
 
@@ -158,11 +186,16 @@
         ' (' + esc(r.symbol_name) + ')</p>' +
         '<p>Das Symbol ist euer Beweis fuer diese Station. Sammelt alle fuenf — sie oeffnen ' +
         'das Schloss.</p>';
-      if (r.code_naechste) {
+      // Die Kette ist zyklisch. Ob der Aufdruck noch etwas oeffnet, haengt
+      // davon ab, ob die naechste Station schon erledigt ist.
+      var naechsteId = V.naechsteRegionVon(r.id);
+      var naechsteFertig = naechsteId && g.regionen[naechsteId] && g.regionen[naechsteId].offen;
+
+      if (r.code_naechste && !naechsteFertig) {
         html += '<p>Darunter steht ein Aufdruck: <span class="code-anzeige sichtbar">' +
           esc(r.code_naechste) + '</span></p>' +
           '<p class="hinweis">Dieser Aufdruck oeffnet die naechste Station: <strong>' +
-          esc(naechsteRegionName(r.id)) + '</strong>. Tragt ihn dort ein.</p>';
+          esc(regionName(naechsteId)) + '</strong>. Tragt ihn dort ein.</p>';
       } else {
         html += '<p class="hinweis">Das war die letzte Station. Mit allen fuenf Symbolen ' +
           'könnt ihr jetzt das Schloss öffnen.</p>';
@@ -581,10 +614,10 @@
     });
   }
 
-  /** Name der Region, die auf eine gegebene folgt. */
-  function naechsteRegionName(regionId) {
-    var i = V.REGIONEN.findIndex(function (r) { return r.id === regionId; });
-    return i >= 0 && i + 1 < V.REGIONEN.length ? V.REGIONEN[i + 1].name : '';
+  /** Der Name einer Station. */
+  function regionName(regionId) {
+    var r = V.REGIONEN.filter(function (x) { return x.id === regionId; })[0];
+    return r ? r.name : '';
   }
 
   function codeEinloesen(regionId) {
@@ -727,16 +760,20 @@
   function lehrkraftText() {
     var u = V.lehrkraftUebersicht();
     var teile = [];
-    teile.push('Startcode (Aufdruck auf dem Zettel): ' + u.startcode);
-    teile.push(u.startcodeText);
+    teile.push('Auf eurem Zettel steht ein Wort und der Name einer Station.');
+    teile.push('Wer an dieser Station anfaengt, traegt das Wort ein.');
     teile.push('');
     u.kette.forEach(function (s) {
       var zeile = s.position + '. ' + s.kuerzel + ' ' + s.region +
         ' — Symbol: ' + s.symbol + ' (' + s.symbolName + ')' +
-        ' — Aufdruck zum Oeffnen: ' + (s.codeZumOeffnen || '—');
-      if (s.codeNaechste) zeile += ' — Aufdruck der naechsten Station: ' + s.codeNaechste;
+        ' — Aufdruck zum Anfangen: ' + s.startcode +
+        ' — Aufdruck nach dem Loesen: ' + (s.codeNaechste || '—');
       teile.push(zeile);
     });
+    teile.push('');
+    teile.push('Die Kette laeuft zyklisch: Wer am Hot-Spot anfaengt, kommt am Ende');
+    teile.push('zur Subduktionszone. Fuenf Zettel, fuenf Stationen, jede Gruppe');
+    teile.push('faengt woanders an.');
     teile.push('');
     teile.push('Schloss-Code: ' + u.schlossCode);
     return teile.join('\n');
@@ -880,6 +917,7 @@
     }
 
     zeichneFigurwahl();
+    zeichneStationswahl();
     $('gruppenAnmeldenBtn').addEventListener('click', meldeGruppeAn);
     $('gruppenName').addEventListener('keydown', function (ev) {
       if (ev.key === 'Enter') { ev.preventDefault(); meldeGruppeAn(); }

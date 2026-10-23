@@ -25,14 +25,16 @@ Die ausführlichen Regeln stehen in [REGELN.md](REGELN.md).
 
 ## Die Codekette
 
-Die Gruppe bekommt am Anfang einen Zettel mit einem Aufdruck. Jede gelöste Station
-liefert das Symbol der Station und den Aufdruck der nächsten Station. Mit allen fünf
-Symbolen lässt sich das Schloss öffnen.
+Die Gruppen arbeiten parallel. Jede bekommt einen Zettel mit einem Aufdruck und
+dem Namen einer Station. Die Kette läuft von dort zyklisch weiter.
 
-    Zettel → ASCHE → Station 1 → FUNKEN → Station 2 → WELLE → Station 3
-          → TROPFEN → Station 4 → DECKE → Station 5 → fünftes Symbol → Schloss
+    SUB    Anfang: ASCHE    gelöst → FUNKEN
+    HOT    Anfang: FUNKEN   gelöst → WELLE
+    MAAR   Anfang: WELLE    gelöst → TROPFEN
+    LIP    Anfang: TROPFEN  gelöst → DECKE
+    RISIKO Anfang: DECKE    gelöst → ASCHE
 
-Die Aufdrucke stehen in `assets/inhalte.js` (`startcode`, `code_naechste`, `schloss.code`)
+Die Aufdrücke stehen in `assets/inhalte.js` (`startcodes` und `code_naechste`)
 und lassen sich dort ändern. Die Lehrkraft sieht alle Aufdrücke über
 „Lehrkraft: Codes anzeigen“ im Abschnitt Auswertung.
 

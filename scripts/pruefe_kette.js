@@ -98,7 +98,70 @@ pruefe('Doppelter Name abgelehnt', V.gruppeAnmelden('Alpha', 'vulkan', STARTCODE
 V.gruppeWaehlen('Alpha');
 pruefe('Aktive Gruppe ist Alpha', V.aktivGruppe() === 'Alpha', V.aktivGruppe());
 
-console.log('\n[2] Codekette und verschlossene Regionen');
+console.log('\n[2] Jede Gruppe darf an einer anderen Station anfangen');
+const startcodes = inhalte.startcodes || {};
+pruefe('Startcodes fuer alle fuenf Stationen hinterlegt',
+      V.REGIONEN.every(r => !!startcodes[r.id]),
+      JSON.stringify(Object.keys(startcodes)));
+pruefe('Alle fuenf Startcodes sind verschieden',
+      new Set(V.REGIONEN.map(r => startcodes[r.id])).size === V.REGIONEN.length,
+      JSON.stringify(V.REGIONEN.map(r => startcodes[r.id])));
+
+// Eine Gruppe, die am Hot-Spot anfaengt.
+V.gruppeAnmelden('Hotstart', 'gletscher', startcodes.hotspot, 'hotspot');
+const hot = V.gruppen().find(g => g.name === 'Hotstart');
+pruefe('Gruppe mit Startcode des Hot-Spot angenommen',
+      hot && hot.startRegion === 'hotspot', hot ? String(hot.startRegion) : 'fehlt');
+pruefe('Nur die gewaehlte Station ist offen',
+      hot.regionen.hotspot.freigeschaltet === true &&
+      V.REGIONEN.filter(r => r.id !== 'hotspot').every(r => !hot.regionen[r.id].freigeschaltet));
+pruefe('Code der falschen Station wird abgelehnt',
+      (function () {
+        const vorher = V.gruppen().length;
+        const e = V.gruppeAnmelden('Falsch', 'team', startcodes.maar, 'hotspot');
+        return e.ok === false && V.gruppen().length === vorher;
+      })());
+pruefe('Code passt nicht, wenn keine Station gewaehlt ist',
+      V.gruppeAnmelden('OhneStation', 'team', STARTCODE, null).ok === true);
+const ohne = V.gruppen().find(g => g.name === 'OhneStation');
+pruefe('Ohne Wahl wird die erste Station genommen',
+      ohne && ohne.startRegion === V.REGIONEN[0].id, ohne ? String(ohne.startRegion) : 'fehlt');
+pruefe('Ohne Wahl ist die erste Station offen',
+      ohne && ohne.regionen[V.REGIONEN[0].id].freigeschaltet === true);
+
+// Zurueck zu Alpha, damit die folgenden Abschnitte mit einem sauberen Zustand laufen.
+V.gruppeWaehlen('Alpha');
+
+console.log('\n[3] Die Kette laeuft zyklisch');
+V.gruppeWaehlen('Hotstart');
+const HOT = 'hotspot';
+pruefe('Der Hot-Spot ist offen', hot.regionen[HOT].freigeschaltet === true);
+pruefe('Der Hot-Spot traegt einen Aufdruck', !!V.REGIONEN.find(r => r.id === HOT).code_naechste);
+// Der Aufdruck des Hot-Spot oeffnet die naechste Station.
+const naechsteNachHot = V.naechsteRegionVon(HOT);
+pruefe('Nach dem Hot-Spot kommt das Maar-Feld', naechsteNachHot === 'maar', String(naechsteNachHot));
+pruefe('Der Aufdruck des Hot-Spot oeffnet die naechste Station',
+      V.REGIONEN.find(r => r.id === HOT).code_naechste === startcodes[naechsteNachHot],
+      V.REGIONEN.find(r => r.id === HOT).code_naechste + ' vs ' + startcodes[naechsteNachHot]);
+// Am Ende der Kette kommt die Gruppe zur Startstation der ersten Gruppe.
+const letzte = V.REGIONEN[V.REGIONEN.length - 1];
+pruefe('Die letzte Station gibt einen Aufdruck weiter', !!letzte.code_naechste, String(letzte.code_naechste));
+pruefe('Nach der letzten Station kommt die erste (zyklisch)',
+      V.naechsteRegionVon(letzte.id) === V.REGIONEN[0].id, String(V.naechsteRegionVon(letzte.id)));
+pruefe('Der Aufdruck der letzten Station oeffnet die erste Station',
+      letzte.code_naechste === startcodes[V.REGIONEN[0].id],
+      letzte.code_naechste + ' vs ' + startcodes[V.REGIONEN[0].id]);
+pruefe('Der Aufdruck jeder Station oeffnet genau die naechste',
+      V.REGIONEN.every(function (r) {
+        const folge = V.naechsteRegionVon(r.id);
+        if (!folge) return true;
+        return r.code_naechste === startcodes[folge];
+      }), JSON.stringify(V.REGIONEN.map(r => r.kuerzel + '->' + r.code_naechste)));
+
+// Zurueck zu Alpha fuer die folgenden Abschnitte.
+V.gruppeWaehlen('Alpha');
+
+console.log('\n[4] Codekette und verschlossene Stationen');
 const alpha = () => V.gruppen().find(g => g.name === 'Alpha');
 const erste = V.REGIONEN[0].id;
 pruefe('Erste Region nach Anmeldung offen', alpha().regionen[erste].freigeschaltet === true);
@@ -118,7 +181,7 @@ pruefe('Falscher Code oeffnet nichts',
 pruefe('Code einer anderen Region wird abgelehnt',
       V.codeEinloesen(V.REGIONEN[2].id, V.REGIONEN[0].code_naechste).ok === false);
 
-console.log('\n[3] Kette durchlaufen');
+console.log('\n[5] Kette durchlaufen');
 let erwarteteSymbole = [];
 
 /**
@@ -186,7 +249,7 @@ pruefe('Symbole in der richtigen Reihenfolge',
 pruefe('Punkte nach allen Aufgaben: 10 Start + 30 Station 1 + 80 Stationen 2-5 = 120',
       alpha().punkte === 120, String(alpha().punkte));
 
-console.log('\n[4] Schloss');
+console.log('\n[6] Schloss');
 pruefe('Schloss ist bereit', V.schlossBereit(alpha()) === true);
 pruefe('Schloss-Code steht in den Daten', typeof SCHLOSS_CODE === 'string' && SCHLOSS_CODE.length > 0);
 const schloss = V.schlossOeffnen();
@@ -201,22 +264,27 @@ pruefe('Gruppe ohne Symbole: Schloss nicht bereit',
       V.schlossBereit(V.gruppen().find(g => g.name === 'Beta')) === false);
 pruefe('Gruppe ohne Symbole: Oeffnen abgelehnt', V.schlossOeffnen().ok === false);
 
-console.log('\n[5] Lehrkraft-Uebersicht');
+console.log('\n[7] Lehrkraft-Uebersicht');
 V.gruppeWaehlen('Alpha');
 const u = V.lehrkraftUebersicht();
 pruefe('Startcode wird geliefert', u.startcode === STARTCODE, u.startcode);
 pruefe('Kette hat fuenf Eintraege', u.kette.length === V.REGIONEN.length);
-pruefe('Jeder Eintrag hat Region, Symbol und Code',
-      u.kette.every(k => k.region && k.symbol && k.codeZumOeffnen));
-pruefe('Code der ersten Region ist der Startcode', u.kette[0].codeZumOeffnen === STARTCODE);
-pruefe('Code der zweiten Region ist der Folgencode der ersten',
-      u.kette[1].codeZumOeffnen === u.kette[0].codeNaechste);
-pruefe('Jeder Code ist mehr als drei Zeichen',
-      u.kette.every(k => k.codeZumOeffnen.length > 3), JSON.stringify(u.kette.map(k => k.codeZumOeffnen)));
-pruefe('Letzte Region hat keinen Folgencode', !u.kette[u.kette.length - 1].codeNaechste);
+pruefe('Jeder Eintrag hat Station, Symbol, Startcode und Folgencode',
+      u.kette.every(k => k.region && k.symbol && k.startcode && k.codeNaechste),
+      JSON.stringify(u.kette));
+pruefe('Startcode der ersten Station ist der Code des Spiels', u.kette[0].startcode === STARTCODE);
+pruefe('Jeder Startcode ist mehr als drei Zeichen',
+      u.kette.every(k => k.startcode.length > 3), JSON.stringify(u.kette.map(k => k.startcode)));
+pruefe('Die letzten Station gibt einen Aufdruck weiter (zyklisch)',
+      !!u.kette[u.kette.length - 1].codeNaechste);
+pruefe('Der Aufdruck jeder Station oeffnet genau die naechste',
+      V.REGIONEN.every(function (r) {
+        var folge = V.naechsteRegionVon(r.id);
+        return !!folge && r.code_naechste === (inhalte.startcodes || {})[folge];
+      }), JSON.stringify(V.REGIONEN.map(function (r) { return r.kuerzel + ' -> ' + r.code_naechste; })));
 pruefe('Schloss-Code wird geliefert', u.schlossCode === SCHLOSS_CODE);
 
-console.log('\n[6] Symbole und Schloss in der Punktetabelle');
+console.log('\n[8] Symbole und Schloss in der Punktetabelle');
 const csv = V.exportCSV();
 const zeilen = csv.trim().split(/\r\n/);
 pruefe('CSV hat neun Spalten', zeilen[0].split(';').length === 9, zeilen[0]);
@@ -226,7 +294,7 @@ pruefe('CSV: Alpha hat 17 Aufgaben geloest und das Schloss offen',
       zeilen.some(z => z.indexOf('Alpha;Vulkanforscherin;130;5;17 von 17;5;0;5;ja') === 0),
       zeilen.join(' | '));
 
-console.log('\n[7] Freitext');
+console.log('\n[9] Freitext');
 const freiId = V.aufgabenVon('hotspot').filter(a => a.typ === 'freitext')[0].id;
 const vorherFreitext = alpha().punkte;
 const tb = V.freitextSpeichern('hotspot', freiId, 'Wir packen eine Maske ein, weil Asche die Atemwege reizt.');
@@ -241,7 +309,7 @@ pruefe('Zu kurze Antwort abgelehnt',
 pruefe('Tagebuch-Text enthaelt die Antwort', V.exportTagebuch().indexOf('Maske') !== -1);
 pruefe('Tagebuch-Export zeigt die Bewertung', V.exportTagebuch().indexOf('bewertet: 5') !== -1);
 
-console.log('\n[8] Dateien und Verdrahtung');
+console.log('\n[10] Dateien und Verdrahtung');
 pruefe('index.html laedt inhalte.js', html.indexOf('src="assets/inhalte.js"') !== -1);
 pruefe('index.html laedt aufgaben.js', html.indexOf('src="assets/aufgaben.js"') !== -1);
 pruefe('index.html laedt logik.js', html.indexOf('src="assets/logik.js"') !== -1);
@@ -269,7 +337,7 @@ pruefe('Regionspositionen stimmen mit den Daten ueberein',
         return kreis.test(svgBlock);
       }));
 
-console.log('\n[9] Inhalte');
+console.log('\n[11] Inhalte');
 pruefe('5 Regionen geladen', V.REGIONEN.length === 5, String(V.REGIONEN.length));
 pruefe('Jede Region hat Aufgaben oder die alten Fragen',
       V.REGIONEN.every(r => (r.aufgaben && r.aufgaben.length) || (r.fragen && r.fragen.length)));
@@ -286,12 +354,12 @@ pruefe('Alle fuenf Symbole sind verschieden',
       new Set(V.REGIONEN.map(r => r.symbol)).size === V.REGIONEN.length);
 pruefe('Erste vier Regionen haben einen Folgencode',
       V.REGIONEN.slice(0, 4).every(r => r.code_naechste && r.code_naechste.length > 3));
-pruefe('Fuenfte Region hat keinen Folgencode',
-      !V.REGIONEN[V.REGIONEN.length - 1].code_naechste);
+pruefe('Fuenfte Station gibt einen Aufdruck weiter (Kette ist zyklisch)',
+      !!V.REGIONEN[V.REGIONEN.length - 1].code_naechste);
 pruefe('5 Spielfiguren vorhanden', V.FIGUREN.length === 5);
 pruefe('Inhalte-Version wird geliefert', V.inhaltVersion === inhalte.version, V.inhaltVersion);
 
-console.log('\n[10] Reset');
+console.log('\n[12] Reset');
 V.reset();
 pruefe('Nach Reset keine Gruppen', V.gruppen().length === 0);
 pruefe('Nach Reset keine Region offen',

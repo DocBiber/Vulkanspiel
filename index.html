@@ -34,6 +34,16 @@
   .figurwahl .symbol { font-size: 1.6rem; line-height: 1; }
   .figurwahl .name { font-size: .8rem; color: #9db4cc; }
 
+  /* Startstation waehlen */
+  .stationswahl { margin-bottom: .8rem; }
+  .stationswahl-liste { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .stationswahl-liste button { display: flex; flex-direction: column; align-items: center; gap: .15rem;
+                               padding: .55rem .8rem; background: #0f2036; min-width: 7.5rem; }
+  .stationswahl-liste button.gewaehlt { border-color: #ffd28a; background: #2a2410; }
+  .stationswahl-liste .symbol { font-size: 1.4rem; line-height: 1; }
+  .stationswahl-liste .name { font-size: .72rem; color: #dbe6f2; }
+  .stationswahl-liste .kuerzel { font-size: .68rem; color: #8fa8bf; }
+
   /* Karte: Land, Gradnetz, Regionen, Figur */
   .laender path { fill: #2e4a66; stroke: #41618a; stroke-width: .6; }
   .gradnetz .aequator { stroke: #4a6fa5; stroke-width: 1.2; stroke-dasharray: 6 4; }
@@ -197,6 +207,7 @@
       „Wer das Geheimnis des Vulkans lüften will, folgt den Spuren der Erde.“
       Tragt den Aufdruck ein, um euer erstes Gebiet zu öffnen.</p>
     <div id="figurwahl" class="figurwahl"></div>
+    <div id="stationswahl" class="stationswahl"></div>
     <form class="anmeldung" onsubmit="return false">
       <input id="gruppenName" placeholder="Gruppenname" maxlength="24" autocomplete="off">
       <input id="startcode" class="code-font" placeholder="Aufdruck vom Zettel" maxlength="20"

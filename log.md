@@ -440,3 +440,54 @@ Offen:
   Sie laufen weiter, sind aber nicht mehr im neuen Umfang.
 - Balancing mit einer echten Klasse steht noch aus.
 
+## [2026-10-22] update | Parallele Startweise (v5.1)
+
+Auslöser: Die Gruppen arbeiten in der Klasse parallel, nicht in einer festen
+Reihenfolge. Die bisherige Kette zwang alle Gruppen durch dieselbe Stationenfolge.
+
+Entschieden: Jede Gruppe wählt eine Startstation und bekommt den Aufdruck dieser
+Station. Die Kette läuft von dort zyklisch weiter. Der Zeitdruck, der bei einer
+festen Reihenfolge bestanden hätte, entfällt dadurch.
+
+Umgesetzt:
+
+- **Startcodes je Station:** Neuer Block `startcodes` in `assets/inhalte.js` —
+  SUB `ASCHE`, HOT `FUNKEN`, MAAR `WELLE`, LIP `TROPFEN`, RISIKO `DECKE`. Jeder
+  Aufdruck ist der, den die vorherige Station der Kette weitergibt.
+- **Zyklische Kette:** `codeFuerRegion` schlägt jetzt zyklisch zurück. Die letzte
+  Station gibt `ASCHE` weiter und öffnet damit die erste, wenn sie noch offen ist.
+  Neu `naechsteRegionVon(regionId)`.
+- **Anmeldung mit Stationswahl:** `gruppeAnmelden` nimmt eine vierte Angabe, die
+  Startstation. Der Aufdruck muss zu ihr passen; sonst kommt eine klare Meldung.
+  Ohne Wahl wird die erste Station genommen, damit ältere Aufrufer laufen.
+- **Stationswahl im Spiel:** Neuer Abschnitt in der Anmeldung mit den fünf
+  Stationen, Symbol und Kürzel. Die Gruppe klickt ihre Station an.
+- **Stationszettel:** Zeigt den Aufdruck nur dann als „öffnet die nächste Station",
+  wenn diese Station noch nicht erledigt ist. Bei der letzten Station steht der
+  Hinweis aufs Schloss.
+- **Lehrkraft-Übersicht:** Zeigt je Station den Aufdruck zum Anfangen und den nach
+  dem Lösen, dazu den Hinweis, dass die Kette zyklisch läuft.
+
+Geprüft:
+
+- `node scripts/pruefe_kette.js` → 110 bestanden, 0 fehlgeschlagen (neu dazu:
+  Startcodes je Station, Ablehnung des falschen Aufdrucks, zyklische Kette,
+  Aufdruck jeder Station öffnet genau die nächste).
+- `node scripts/pruefe_aufgaben.js` → 87 bestanden, 0 fehlgeschlagen.
+- Ende-zu-Ende im Browser über `file://`: Stationswahl mit fünf Stationen,
+  `ASCHE` bei Hot-Spot abgelehnt, `FUNKEN` angenommen, nur Hot-Spot offen,
+  Station gelöst, Aufdruck `WELLE` öffnet das Maar, Subduktion bleibt verschlossen.
+  Keine Konsolenfehler.
+
+Behoben unterwegs:
+
+- Die Tests ließen Gruppen aus dem neuen Abschnitt stehen, die den aktiven
+  Zustand veränderten. Beide Abschnitte schalten jetzt explizit zurück.
+- Der Stationszettel nannte nach der letzten Station die erste Station der Kette
+  als „nächste" — das war bei einer zyklischen Kette falsch.
+
+Offen:
+
+- Weg A (lokaler Bewertungsdienst) ist geplant, aber noch nicht gebaut.
+- Station 2 bis 5 tragen noch die alten zwei Fragen und eine Tagebuch-Frage.
+

@@ -66,6 +66,27 @@
   var STARTCODE = (INHALTE && INHALTE.startcode) || 'ASCHE';
   var SCHLOSS_BONUS = (INHALTE && INHALTE.schloss && INHALTE.schloss.bonuspunkte) || 10;
 
+  /**
+   * Die Startcodes je Station. Jede Gruppe darf an einer beliebigen Station
+   * anfangen und erhaelt den Code dieser Station. Die Kette laeuft dann
+   * zyklisch von dort aus weiter: Nach dem Loesen einer Station kommt die
+   * Gruppe zu der, deren Aufdruck auf dem Zettel steht.
+   */
+  var STARTCODES = (INHALTE && INHALTE.startcodes) || {};
+
+  function startcodeFuer(regionId) {
+    if (STARTCODES[regionId]) return STARTCODES[regionId];
+    // Faellt eine Station keinen eigenen Startcode hat, oeffnet der Startcode
+    // des Spiels sie — so bleibt ein aelterer Stand lauffaehig.
+    return STARTCODE;
+  }
+
+  /** Der Code, der eine Station oeffnet, wenn die Gruppe dort angefangen hat. */
+  function kettenCode(regionId, startRegionId) {
+    if (regionId === startRegionId) return startcodeFuer(regionId);
+    return codeFuerRegion(regionId);
+  }
+
   var REGIONEN = (INHALTE && INHALTE.regionen && INHALTE.regionen.length)
     ? INHALTE.regionen
     : REGIONEN_FALLBACK;
@@ -193,21 +214,42 @@
     return f;
   }
 
-  /** Der Code, der zum Oeffnen einer Region noetig ist. */
+  /**
+   * Der Code, der eine Station oeffnet — der Aufdruck, den die vorherige
+   * Station der Kette auf ihrem Zettel traegt. Die Kette ist zyklisch: Wer
+   * zum Beispiel am Hot-Spot anfaengt, kommt am Ende zur Subduktionszone.
+   */
   function codeFuerRegion(regionId) {
-    for (var i = 0; i < REGIONEN.length; i++) {
+    var n = REGIONEN.length;
+    if (!n) return '';
+    for (var i = 0; i < n; i++) {
       if (REGIONEN[i].id !== regionId) continue;
-      return i === 0 ? STARTCODE : (REGIONEN[i - 1].code_naechste || '');
+      var vorgaenger = REGIONEN[(i - 1 + n) % n];
+      return vorgaenger.code_naechste || '';
     }
     return '';
   }
 
-  /** Die Position einer Region in der Kette (1 bis 5). */
+  /** Die Position einer Station in der Kette (1 bis 5). */
   function kettenPosition(regionId) {
     for (var i = 0; i < REGIONEN.length; i++) {
       if (REGIONEN[i].id === regionId) return i + 1;
     }
     return 0;
+  }
+
+  /**
+   * Die naechste Station nach einer geloesten. Die Kette laeuft zyklisch,
+   * deshalb gibt es immer eine naechste, ausser die Station war die letzte.
+   */
+  function naechsteRegionVon(regionId) {
+    var n = REGIONEN.length;
+    for (var i = 0; i < n; i++) {
+      if (REGIONEN[i].id !== regionId) continue;
+      var naechste = REGIONEN[(i + 1) % n];
+      return naechste.id === regionId ? '' : naechste.id;
+    }
+    return '';
   }
 
   /** Offene Regionen auf der Karte sichtbar machen. */
@@ -251,32 +293,39 @@
   // ---------- Aktionen ----------
 
   /**
-   * Eine Gruppe anmelden. Der Code vom Zettel (Startcode) muss stimmen, sonst
-   * beginnt das Spiel nicht.
+   * Eine Gruppe anmelden. Sie waehlt eine Station zum Anfangen und traegt den
+   * Aufdruck dieser Station ein. Der Code muss zu der gewaehlten Station
+   * passen, sonst beginnt das Spiel nicht.
+   *
+   * Ohne gewaehlte Station (aeltere Aufrufer) wird die erste Station genommen.
    */
-  function gruppeAnmelden(name, figurId, startcode) {
+  function gruppeAnmelden(name, figurId, startcode, startRegionId) {
     name = String(name == null ? '' : name).trim();
     if (!name) return { ok: false, fehler: 'Bitte einen Gruppennamen eingeben.' };
     if (name.length > 24) return { ok: false, fehler: 'Name zu lang (max. 24 Zeichen).' };
     if (gruppe(name)) return { ok: false, fehler: 'Dieser Gruppenname ist bereits vergeben.' };
     if (!figurId) return { ok: false, fehler: 'Bitte eine Spielfigur waehlen.' };
+    if (!startRegionId || !region(startRegionId)) {
+      startRegionId = REGIONEN[0].id;
+    }
 
     var code = String(startcode == null ? '' : startcode).trim().toUpperCase();
     if (!code) return { ok: false, fehler: 'Bitte den Aufdruck vom Zettel eintragen.' };
-    if (code !== String(STARTCODE).toUpperCase()) {
-      return { ok: false, fehler: 'Das ist nicht der Aufdruck vom Zettel. Schaut noch einmal genau hin.' };
+    if (code !== String(startcodeFuer(startRegionId)).toUpperCase()) {
+      return { ok: false, fehler: 'Dieser Aufdruck oeffnet eine andere Station. Schaut den Zettel noch einmal an.' };
     }
 
     var f = figur(figurId);
     var regionen = neuerFortschritt();
-    // Der Startcode oeffnet die erste Region der Kette.
-    regionen[REGIONEN[0].id].freigeschaltet = true;
+    // Der Aufdruck oeffnet genau die Station, an der die Gruppe anfaengt.
+    regionen[startRegionId].freigeschaltet = true;
 
     zustand.gruppen.push({
       name: name,
       figur: f.id,
       symbol: f.symbol,
       figurName: f.name,
+      startRegion: startRegionId,
       punkte: STARTPUNKTE,
       regionen: regionen,
       schlossAuf: false
@@ -730,7 +779,9 @@
         kuerzel: r.kuerzel,
         symbol: r.symbol,
         symbolName: r.symbol_name,
-        codeZumOeffnen: codeFuerRegion(r.id),
+        // Der Aufdruck, mit dem eine Gruppe an dieser Station anfaengt.
+        startcode: startcodeFuer(r.id),
+        // Der Aufdruck, den diese Station nach dem Loesen weitergibt.
         codeNaechste: r.code_naechste || ''
       };
     });
@@ -810,6 +861,8 @@
     aufgabenVon: aufgabenVon,
     aufgabePruefen: aufgabePruefen,
     frageBeantworten: frageBeantworten,
+    startcodeFuer: startcodeFuer,
+    naechsteRegionVon: naechsteRegionVon,
     freitextSpeichern: freitextSpeichern,
     freitextBewerten: freitextBewerten,
     freitextImport: freitextImport,

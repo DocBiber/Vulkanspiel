@@ -27,7 +27,7 @@
  */
 window.VULKAN_STATIONEN = {
   "spiel": "Vulkanspiel",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "created": "2026-10-21",
   "updated": "2026-10-22",
   "zielgruppe": "LK Geografie, Gymnasium Baden-Württemberg, Klassen 11/12",
@@ -38,7 +38,14 @@ window.VULKAN_STATIONEN = {
     "tagebuch_abgabe": 5
   },
   "startcode": "ASCHE",
-  "startcode_text": "Auf dem Zettel steht nur ein Wort: ASCHE. Darunter ein Strich und fünf kleine Felder.",
+  "startcodes": {
+    "subduktion": "ASCHE",
+    "hotspot": "FUNKEN",
+    "maar": "WELLE",
+    "lip": "TROPFEN",
+    "risiko": "DECKE"
+  },
+  "startcode_text": "Auf dem Zettel steht ein Wort und der Name einer Station. Wer zu dieser Station darf anfangen.",
   "schloss": {
     "bonuspunkte": 10,
     "code": "ERUPTION",
@@ -316,7 +323,7 @@ window.VULKAN_STATIONEN = {
       "figur": { "x": 581.1, "y": 254.2 },
       "symbol": "🔥",
       "symbol_name": "Feuer",
-      "code_naechste": "",
+      "code_naechste": "ASCHE",
       "fragen": [
         {
           "id": "ris-1",

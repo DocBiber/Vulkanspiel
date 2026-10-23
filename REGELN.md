@@ -30,22 +30,36 @@ Mit allen fünf Symbolen öffnet sich das Schloss.
 ## 1. Anmeldung
 
 1. Jede Gruppe (5 Gruppen à 3 bis 5 Schülerinnen und Schüler) wählt eine Spielfigur,
-   bekommt einen Gruppennamen und trägt den Aufdruck vom Zettel ein. Der Startcode ist
-   für alle Gruppen gleich.
-2. Die Gruppe startet mit 10 Punkten. Der Startcode öffnet die erste Region der Kette.
-3. Die Figur wandert auf der Karte zu jeder Region, die die Gruppe anklickt.
+   bekommt einen Gruppennamen, sucht die Station aus, an der sie anfangen will, und
+   trägt den Aufdruck dieser Station ein.
+2. Der Aufdruck muss zu der gewählten Station passen, sonst beginnt das Spiel nicht.
+   Jede Station hat einen eigenen Aufdruck.
+3. Die Gruppe startet mit 10 Punkten. Der Aufdruck öffnet genau die Station, an der
+   die Gruppe anfängt.
+4. Die Figur wandert auf der Karte zu jeder Station, die die Gruppe anklickt.
 
 ## 2. Die Codekette
 
-    Zettel am Anfang  →  Aufdruck ASCHE  →  öffnet Station 1 (SUB)
-    Station 1 gelöst →  Aufdruck FUNKEN →  öffnet Station 2 (HOT)
-    Station 2 gelöst →  Aufdruck WELLE  →  öffnet Station 3 (MAAR)
-    Station 3 gelöst →  Aufdruck TROPFEN → öffnet Station 4 (LIP)
-    Station 4 gelöst →  Aufdruck DECKE  →  öffnet Station 5 (RISIKO)
-    Station 5 gelöst →  das fünfte Symbol
+Die Gruppen arbeiten parallel. Jede beginnt an ihrer eigenen Station, und die Kette
+läuft von dort zyklisch weiter — wer am Hot-Spot anfängt, kommt am Ende zur
+Subduktionszone.
 
-Die Aufdrucke stehen in `assets/inhalte.js` und lassen sich dort ändern. Die Lehrkraft
-sieht alle Aufdrücke über „Lehrkraft: Codes anzeigen“ im Abschnitt Auswertung.
+    Station 1  SUB     Aufdruck zum Anfangen: ASCHE
+    Station 2  HOT     Aufdruck zum Anfangen: FUNKEN
+    Station 3  MAAR    Aufdruck zum Anfangen: WELLE
+    Station 4  LIP     Aufdruck zum Anfangen: TROPFEN
+    Station 5  RISIKO  Aufdruck zum Anfangen: DECKE
+
+    ASCHE   öffnet SUB     SUB gelöst     → FUNKEN → öffnet HOT
+    FUNKEN  öffnet HOT     HOT gelöst     → WELLE  → öffnet MAAR
+    WELLE   öffnet MAAR    MAAR gelöst    → TROPFEN → öffnet LIP
+    TROPFEN öffnet LIP     LIP gelöst     → DECKE  → öffnet RISIKO
+    DECKE   öffnet RISIKO  RISIKO gelöst  → ASCHE  → öffnet SUB (falls noch offen)
+
+Die Aufdrücke stehen in `assets/inhalte.js` (`startcodes` und `code_naechste`) und
+lassen sich dort ändern. Die Lehrkraft sieht alle Aufdrücke über
+„Lehrkraft: Codes anzeigen“ im Abschnitt Auswertung — dort steht auch, welcher
+Aufdruck zu welcher Station gehört.
 
 ## 3. Aufgaben in einer Station
 
