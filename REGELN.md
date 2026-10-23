@@ -47,21 +47,62 @@ Mit allen fünf Symbolen öffnet sich das Schloss.
 Die Aufdrucke stehen in `assets/inhalte.js` und lassen sich dort ändern. Die Lehrkraft
 sieht alle Aufdrücke über „Lehrkraft: Codes anzeigen“ im Abschnitt Auswertung.
 
-## 3. Ablauf in einer Station
+## 3. Aufgaben in einer Station
 
-1. Die Gruppe klickt eine Region an. Ist sie verschlossen, erscheint ein Eingabefeld
-   für den Aufdruck.
+Jede Station trägt fünf Aufgaben von unterschiedlichem Typ. Erst wenn alle fünf
+gelöst sind, wird die Station aufgedeckt und der Zettel mit dem Symbol und dem
+Aufdruck der nächsten Station erscheint.
+
+| Typ | Was die Gruppe tun muss | Punkte |
+|---|---|---|
+| Multiple Choice | Vier Antworten, eine anklicken | 8 |
+| Begriffe zuordnen | Begriffe auf nummerierte Felder einer Skizze ziehen | 8 |
+| Richtig/Falsch | Drei bis vier Aussagen einzeln bewerten | 6 |
+| Lückentext | Wörter aus einem Kärtchenstapel in die Lücken setzen | 8 |
+| Wortgitter | Buchstaben in ein Raster, Hinweise zuordnen | 8 |
+| Fehler entdecken | Fehlstellen in einem Text anklicken | 6 |
+| Freitext | Eine Antwort schreiben, die bewertet wird | 10 |
+
+Nicht jede Station nutzt alle Typen. Pro Station sind etwa 30 bis 40 Punkte
+möglich. Eine halb richtige Lösung bringt die entsprechenden Teilpunkte —
+eine Gruppe, die etwas falsch macht, muss die Aufgabe nicht komplett neu beginnen.
+
+## 4. Der Ablauf in einer Station
+
+1. Die Gruppe klickt eine Station an. Ist sie verschlossen, erscheint ein
+   Eingabefeld für den Aufdruck.
 2. Mit dem richtigen Aufdruck öffnet sich die Station.
-3. Es erscheinen zwei Multiple-Choice-Fragen. Jede hat vier Antwortmöglichkeiten,
-   genau eine ist richtig.
-4. Eine richtige Antwort bringt 10 Punkte und wird mit einer Erklärung bestätigt.
-   Eine falsche Antwort bringt keine Punkte; die Gruppe kann es erneut versuchen.
-5. Sind beide Fragen richtig, wird die Region farbig aufgedeckt. Jetzt bekommt die
-   Gruppe das Symbol der Station und den Aufdruck der nächsten Station.
-6. Danach gibt es eine offene Tagebuch-Frage. Die Gruppe schreibt ihre Antwort als Freitext
-   ins Tagebuch. Eine Abgabe bringt 5 Punkte; die Antwort lässt sich danach ändern.
+3. Die Gruppe arbeitet die fünf Aufgaben der Reihe nach durch. Eine Aufgabe,
+   die schon gelöst ist, bleibt stehen und zeigt ihre Erklärung.
+4. Sind alle fünf gelöst, wird die Station farbig aufgedeckt. Jetzt bekommt
+   die Gruppe das Symbol der Station und den Aufdruck der nächsten Station.
+5. Die Freitext-Antwort gehört ebenfalls zur Station. Sie zählt als gelöst,
+   sobald sie abgeschickt ist — ihre Punkte folgen mit der Bewertung.
 
-## 4. Das Schloss
+## 5. Die Bewertung des Freitextes
+
+Jede Freitext-Aufgabe trägt drei Kriterien. Sie stehen im Spiel unter der
+Aufgabe und den Schülern vor Augen.
+
+Es gibt zwei Wege, die Antworten zu bewerten:
+
+**Weg B — über eine Bewertungsdatei.** Im Abschnitt „Auswertung" liegt ein
+Knopf „Freitexte zur Bewertung". Er lädt eine JSON-Datei herunter, die alle
+noch offenen Antworten enthält: Gruppe, Station, Frage, die Kriterien, das
+Maximum und die Antwort selbst. Diese Datei der Bewertung zuführen und das
+Ergebnis als JSON-Datei zurück ins Spiel laden — der Knopf „Bewertungen
+einlesen" nimmt sie entgegen. So fällt kein Schlüssel auf dem Schülerrechner
+und es läuft kein Dienst.
+
+**Weg A — über einen lokalen Bewertungsdienst.** Eine kleine lokale Anwendung
+holt die Antworten ab und bewertet sie direkt. Sie ist für den Fall gedacht,
+dass die Schule einen Rechner bereitstellen kann, den alle Gruppen erreichen.
+Aufbau und Einrichtung stehen in `scripts/`.
+
+Ohne Bewertung gilt eine Freitext-Antwort als abgegeben. Die Station kann also
+auch ohne Bewertung aufgedeckt werden; es fehlen dann nur die Punkte.
+
+## 6. Das Schloss
 
 Jede Station trägt ein Symbol:
 
@@ -76,21 +117,27 @@ Jede Station trägt ein Symbol:
 Sind alle fünf Symbole gesammelt, kann die Gruppe das Schloss öffnen. Das bringt
 10 Bonuspunkte und den Abschluss-Code.
 
-## 5. Punkte und Fortschritt
+## 7. Punkte und Fortschritt
 
 | Leistung | Punkte |
 |---|---|
-| Multiple-Choice-Frage richtig beantwortet | 10 |
-| Tagebuch-Frage abgegeben | 5 |
+| Multiple-Choice-Frage richtig beantwortet | 8 |
+| Begriffe zuordnen | 8 |
+| Richtig/Falsch | 6 |
+| Lückentext | 8 |
+| Wortgitter | 8 |
+| Fehler entdecken | 6 |
+| Freitext-Aufgabe bewertet | 10 |
 | Schloss geöffnet | 10 |
 
-Pro Station sind 25 Punkte möglich. Höchstpunktzahl: 10 Startpunkte + 5 × 25 + 10 Schloss
-= 145.
+Pro Station sind 30 bis 40 Punkte möglich, der Freitext kommt mit der Bewertung
+dazu. Höchstpunktzahl: 10 Startpunkte + 5 × ca. 34 + 10 Schloss ≈ 190.
 
-Der Fortschritt (Spielstand) zeigt an, wieviele der fünf Regionen aufgedeckt sind und
-wieviele Symbole gefunden sind. Beides steht in der Punktetabelle und in der CSV.
+Der Fortschritt (Spielstand) zeigt an, wieviele der fünf Stationen aufgedeckt
+sind, wieviele Aufgaben gelöst sind und wieviele Symbole gefunden sind. Alles
+steht in der Punktetabelle und in der CSV.
 
-## 6. Das Tagebuch
+## 8. Das Tagebuch
 
 Das Tagebuch sammelt die Freitext-Antworten aller Gruppen. Die Fragen sind bewusst offen,
 keine davon hat eine einzige richtige Lösung:
@@ -114,7 +161,7 @@ einbezogen werden — etwa als Grundlage für eine Diskussion.
 | 4 | LIP | Deccan-Trapp, Indien | Vulkanische Decken, Klimawirkung |
 | 5 | RISIKO | Nyiragongo und Goma | Risiko, Exposition, Vulnerabilität |
 
-## 8. Zeitplan (45 Minuten)
+## 9. Zeitplan (45 Minuten)
 
 | Phase | Dauer |
 |---|---|
@@ -123,19 +170,23 @@ einbezogen werden — etwa als Grundlage für eine Diskussion.
 | Schloss öffnen, Auswertung der Punkte und des Fortschritts | 10 min |
 | Auswertung des Tagebuchs, Diskussion, Gewinner | 5 min |
 
-## 9. Technik
+## 10. Technik
 
 - Eine einzige HTML-Datei genügt, die das Spiel komplett enthält: `index.html`.
 - Keine Installation, kein Server, kein Internet.
 - Die Weltkarte ist als SVG direkt in `index.html` eingebettet, funktioniert also
   auch per Doppelklick ohne Server.
-- Die Inhalte (Regionen, Fragen, Symbole, Aufdrücke) liegen in `assets/inhalte.js` und
-  werden per `<script src>` geladen, ebenfalls ohne `fetch`.
-- Punkte, Symbole und Tagebuch werden im Browser gespeichert (localStorage).
-- Am Ende der Stunde lassen sich Punkte als CSV (Semikolon, UTF-8 mit BOM für Excel)
-  und das Tagebuch als Textdatei exportieren.
+- Die Inhalte (Stationen, Aufgaben, Symbole, Aufdrücke, Skizzen) liegen in
+  `assets/inhalte.js` und werden per `<script src>` geladen, ebenfalls ohne `fetch`.
+- Die Aufgabentypen liegen in `assets/aufgaben.js`. Ein neuer Typ braucht dort
+  einen Eintrag mit Name und Prüffunktion; Logik und Oberfläche fragen das
+  Verzeichnis ab.
+- Punkte, Symbole und Freitexte werden im Browser gespeichert (localStorage).
+- Am Ende der Stunde lassen sich Punkte als CSV (Semikolon, UTF-8 mit BOM für
+  Excel), das Tagebuch als Text und die Freitexte zur Bewertung als JSON
+  exportieren.
 
-## 10. Kompetenzbezug (Bildungsplan 2016)
+## 11. Kompetenzbezug (Bildungsplan 2016)
 
 - **Orientierungskompetenz:** Einordnen von Vulkanräumen und Gefahrenmustern.
 - **Analysekompetenz:** Zusammenhänge zwischen Magmazusammensetzung, Eruptionsstil

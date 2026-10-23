@@ -27,7 +27,7 @@
  */
 window.VULKAN_STATIONEN = {
   "spiel": "Vulkanspiel",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "created": "2026-10-21",
   "updated": "2026-10-22",
   "zielgruppe": "LK Geografie, Gymnasium Baden-Württemberg, Klassen 11/12",
@@ -51,6 +51,19 @@ window.VULKAN_STATIONEN = {
     { "id": "fernerkun",  "symbol": "🛰️", "name": "Fernerkundung" },
     { "id": "team",       "symbol": "🧭", "name": "Feldteam" }
   ],
+  "skizzen": {
+    "schichtvulkan": {
+      "name": "Schichtvulkan im Querschnitt",
+      "viewBox": "0 0 1000 400",
+      "svg": "<polygon points='180,340 820,340 500,110' class='skizze-koerper' />" +
+        "<polygon points='460,110 540,110 520,150 480,150' class='skizze-krater' />" +
+        "<line x1='500' y1='145' x2='500' y2='330' class='skizze-schlot' />" +
+        "<ellipse cx='500' cy='360' rx='150' ry='26' class='skizze-magma' />" +
+        "<line x1='300' y1='285' x2='700' y2='285' class='skizze-schicht' />" +
+        "<line x1='250' y1='312' x2='750' y2='312' class='skizze-schicht' />" +
+        "<line x1='420' y1='196' x2='580' y2='196' class='skizze-schicht' />"
+    }
+  },
   "regionen": [
     {
       "id": "subduktion",
@@ -63,37 +76,86 @@ window.VULKAN_STATIONEN = {
       "symbol": "🌋",
       "symbol_name": "Vulkan",
       "code_naechste": "FUNKEN",
-      "fragen": [
+      "aufgaben": [
         {
           "id": "sub-1",
           "typ": "mc",
-          "punkte": 10,
+          "punkte": 8,
           "frage": "Warum sind Vulkanausbrüche an Subduktionszonen oft explosiv?",
-          "optionen": [
-            "Das Magma ist basaltisch und niedrig viskos, Gase entweichen leicht.",
-            "Das Magma ist intermediär bis felsisch und hoch viskos, Gase bleiben eingeschlossen.",
-            "Es gibt dort kein Wasser im Mantel, daher kein Dampfdruck.",
-            "Die Platten bewegen sich auseinander, dadurch entsteht Druck."
-          ],
-          "richtig": 1,
-          "erklaerung": "Die abtauchende Platte führt Wasser in den Mantel, Partialschmelze erzeugt intermediäres bis felsisches Magma. Hoher SiO2-Gehalt bedeutet hohe Viskosität — Gase bleiben eingeschlossen, der Druck baut sich auf, die Eruption wird explosiv."
+          "daten": {
+            "optionen": [
+              "Das Magma ist basaltisch und niedrig viskos, Gase entweichen leicht.",
+              "Das Magma ist intermediär bis felsisch und hoch viskos, Gase bleiben eingeschlossen.",
+              "Es gibt dort kein Wasser im Mantel, daher kein Dampfdruck.",
+              "Die Platten bewegen sich auseinander, dadurch entsteht Druck."
+            ],
+            "richtig": 1,
+            "erklaerung": "Die abtauchende Platte führt Wasser in den Mantel, Partialschmelze erzeugt intermediäres bis felsisches Magma. Hoher SiO2-Gehalt bedeutet hohe Viskosität — Gase bleiben eingeschlossen, der Druck baut sich auf, die Eruption wird explosiv."
+          }
         },
         {
           "id": "sub-2",
-          "typ": "mc",
+          "typ": "zuordnung",
+          "punkte": 8,
+          "frage": "Ordnet die vier Begriffe den Feldern A bis D der Skizze zu.",
+          "daten": {
+            "skizze": "schichtvulkan",
+            "felder": [
+              { "id": "A", "x": 500, "y": 60 },
+              { "id": "B", "x": 500, "y": 215 },
+              { "id": "C", "x": 300, "y": 305 },
+              { "id": "D", "x": 500, "y": 368 }
+            ],
+            "begriffe": ["Krater", "Schlot", "Schichtkoerper", "Magma-Kammer"],
+            "loesung": { "A": "Krater", "B": "Schlot", "C": "Schichtkoerper", "D": "Magma-Kammer" },
+            "hinweis": "Der Krater ist die Oeffnung an der Oberflaeche, der Schlot der Kanal, der Schichtkoerper das gelaegerte Hanggestein und die Magma-Kammer der Speicher in der Tiefe."
+          }
+        },
+        {
+          "id": "sub-3",
+          "typ": "richtig_falsch",
+          "punkte": 6,
+          "frage": "Bewertet jede Aussage: stimmt sie oder nicht?",
+          "daten": {
+            "aussagen": [
+              { "text": "An einer Subduktionszone taucht eine dichtere Platte unter eine leichtere ab.", "richtig": true },
+              { "text": "Das Wasser der abtauchenden Platte senkt die Schmelztemperatur des Mantels.", "richtig": true },
+              { "text": "Vulkane an Subduktionszonen spucken immer basaltisches, niedrig viskoses Magma.", "richtig": false },
+              { "text": "Die Anden sind ein Beispiel fuer Vulkanismus an einer Subduktionszone.", "richtig": true }
+            ]
+          }
+        },
+        {
+          "id": "sub-4",
+          "typ": "lueckentext",
+          "punkte": 8,
+          "frage": "Setzt die richtigen Wörter ein. Ihr könnt jedes Kärtchen nur einmal verwenden.",
+          "daten": {
+            "text": "Die [1] Platte taucht unter die [2] Platte ab. Dadurch gelangt Wasser in den Mantel und es entsteht [3]. Das hoch viskose Magma staut sich im [4] und die Eruption wird explosiv.",
+            "loesungen": [
+              { "id": "1", "wort": "dichtere", "alternativen": ["dichte", "dicht"] },
+              { "id": "2", "wort": "leichtere", "alternativen": ["leichter"] },
+              { "id": "3", "wort": "Magma", "alternativen": ["magma"] },
+              { "id": "4", "wort": "Schlot", "alternativen": ["schlot"] }
+            ],
+            "distraktoren": ["Meer", "Wind", "Gestein"]
+          }
+        },
+        {
+          "id": "sub-5",
+          "typ": "freitext",
           "punkte": 10,
-          "frage": "Welcher Vulkan gehört NICHT in eine Subduktionszone?",
-          "optionen": [
-            "Cotopaxi (Ecuador)",
-            "Mount St. Helens (USA)",
-            "Vesuv (Italien)",
-            "Kilauea (Hawaii)"
-          ],
-          "richtig": 3,
-          "erklaerung": "Kilauea liegt über einem Hot Spot, nicht an einer Subduktionszone. Cotopaxi, Mount St. Helens und der Vesuv liegen an Subduktionszonen."
+          "frage": "Warum ist das Risiko an einem Vulkan wie dem Villarrica in Chile höher als an einem Vulkan in Alaska? Begründet mit zwei Faktoren.",
+          "daten": {
+            "kriterien": [
+              "Erwaehnt die Exposition (Menschen und Infrastruktur in der Naehe).",
+              "Erwaehnt die Vulnerabilitaet (Fruehwarnung, Infrastruktur, Wirtschaftskraft).",
+              "Erklaert den Unterschied zwischen beiden Faellenn, nicht nur die beiden Orte."
+            ]
+          }
         }
       ],
-      "tagebuch": [
+      "tagebuch_alt": [
         {
           "id": "sub-t1",
           "frage": "Stell dir vor, du könntest an den Rand des Pazifischen Feuerrings reisen: Was würdest du unbedingt einpacken — und warum?"

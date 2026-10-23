@@ -344,3 +344,99 @@ Offen:
   Schülerrechner liegen.
 - Balancing mit einer echten Klasse steht noch aus.
 
+## [2026-10-22] update | Aufgabentypen und Freitext-Bewertung (v5)
+
+Auslöser: Es gab pro Station nur zwei Aufgaben, alle vom selben Typ. Gefordert
+wurde mehr Vielfalt (Begriffe einer Skizze zuordnen, Richtig/Falsch, Fehler
+entdecken, Kreuzworträtsel), mehr als zwei Aufgaben pro Station und Freitexte,
+die von einer KI bewertet werden.
+
+Entschieden: alles im Browser, fünf Aufgaben pro Station, Bewertung bevorzugt
+über eine Bewertungsdatei (Weg B) statt über einen laufenden Dienst. Kreuzworträtsel
+wurde zugunsten von Lückentext und Wortgitter aufgelöst, weil beide denselben
+Effekt mit deutlich weniger Aufwand haben.
+
+Umgesetzt:
+
+- **Aufgabentypen-System:** Jede Aufgabe trägt `typ` und `daten`. Die Typen liegen
+  in `assets/aufgaben.js` (window.AUFGABEN_TYPEN) mit Name und Prüffunktion.
+  Einheitliches Ergebnis: richtig, punkte, max, hinweis, details, moeglich.
+  Sieben Typen: `mc`, `zuordnung`, `richtig_falsch`, `lueckentext`, `wortgitter`,
+  `fehler`, `freitext`.
+- **Punkteskalierung:** Jede Aufgabe trägt `punkte`, das wird als `max` an die
+  Prüffunktion übergeben. Mehrteilige Typen verteilen die Punkte anteilig auf
+  ihre Teile — eine halb richtige Lösung bringt die Hälfte der Punkte.
+- **Vergleich verzeihend:** Groß-/Kleinschreibung, Umlaute, Satzzeichen am Rand
+  und Bindestriche zählen bei Wörtern nicht als Fehler.
+- **Station 1 als Prototyp:** fünf Aufgaben, vier verschiedene Typen — Multiple
+  Choice, Begriffe einer Skizze zuordnen, Richtig/Falsch, Lückentext, Freitext.
+- **Skizzen:** `skizzen` in `assets/inhalte.js` mit viewBox und SVG-Markup. Die
+  Felder der Zuordnungsaufgabe liegen als SVG-Gruppen in der Skizze, damit sie
+  mit der Skizze skalieren.
+- **Freitext-Bewertung (Weg B):** Eine Freitext-Antwort zählt als gelöst, gibt
+  aber erst mit der Bewertung Punkte. `freitextSpeichern`, `freitextBewerten`,
+  `freitextImport`, `freitextOffen`, `freitextAufgabeExport`. Der Export liefert
+  JSON mit Gruppe, Station, Aufgabe, Frage, Kriterien, Maximum und Antwort; der
+  Import nimmt JSON mit Gruppe, Aufgabe, Punkten und Hinweis entgegen.
+  Eine erneute Bewertung ersetzt die Punkte, statt sie zu addieren.
+- **Kriterien stehen im Spiel:** Jede Freitext-Aufgabe zeigt die drei Kriterien
+  unter der Aufgabe, bevor die Gruppe schreibt.
+- **CSV:** neun Spalten — dazu „Aufgaben geloest", „Tagebuch-Eintraege" und
+  „Freitext bewertet".
+- **Rückwärtskompatibilität:** Stationen ohne `aufgaben` liefern ihre alten
+  `fragen` und `tagebuch` umgesetzt, damit die noch nicht umgebauten Stationen
+  weiterlaufen.
+
+Dateien:
+
+- `assets/aufgaben.js` neu: die sieben Typen mit Prüffunktionen, dazu
+  Schüttelwörter-Generator und Wortvergleich.
+- `assets/inhalte.js`: `version` 5.0.0, neuer Block `skizzen`, Station 1 mit
+  fünf Aufgaben statt zwei Fragen und einer Tagebuch-Frage.
+- `assets/logik.js`: Speicherstand v5, `aufgabenVon`, `aufgabePruefen` statt
+  `frageBeantworten` (letzteres bleibt als Hülle), `geloesteInRegion` statt
+  `richtigeInRegion`, Freitext-Funktionen, erweiterte Exporte.
+- `assets/oberflaeche.js`: Renderer für alle sieben Typen, Eingabensammler mit
+  Ziehen und Tippen, Freitext-Felder mit Kriterien, Tagebuch- und
+  Auswertungstabelle um die neuen Spalten erweitert, Import von Bewertungen.
+- `index.html`: `aufgaben.js` eingebunden, Styles für Aufgaben, Skizzen,
+  Kärtchen, Lückentext, Wortgitter, Fehler und Freitext.
+- `scripts/pruefe_aufgaben.js` neu: 87 Prüfungen für die Typen und die
+  Freitext-Bewertung.
+- `scripts/pruefe_kette.js`: an das v5-Modell angepasst, generisch eine Station
+  lösend.
+
+Geprüft:
+
+- `node scripts/pruefe_aufgaben.js` → 87 bestanden, 0 fehlgeschlagen.
+- `node scripts/pruefe_kette.js` → 94 bestanden, 0 fehlgeschlagen.
+- Ende-zu-Ende im Browser über `file://`: Anmeldung mit Startcode, Station 1
+  öffnen, alle fünf Aufgaben der Reihe nach lösen (Multiple Choice per Klick,
+  Skizze per Klick auf Kärtchen und Feld, Richtig/Falsch, Lückentext, Freitext),
+  Station aufgedeckt, 40 Punkte, Symbol frei, Stationszettel mit FUNKEN.
+  Bewertungsdatei eingelesen: 40 → 47 Punkte, kein offener Freitext mehr.
+  Keine Konsolenfehler.
+- Sichtprüfung im Browser: Die Skizze zeigt einen Schichtvulkan im Querschnitt
+  mit vier Markern. Nach einer Korrektur der Markerpositionen sitzen A am
+  Krater, B auf dem Steigeschacht, C an der Flanke und D in der Magma-Kammer —
+  die Zuordnung ist eindeutig.
+
+Behoben unterwegs:
+
+- Die Marker der Skizze lagen zuerst beide auf der Flanke, sodass „Schlot" und
+  „Schichtkoerper" nicht unterscheidbar waren. B liegt jetzt auf der Mittellinie,
+  C an der Flanke.
+- Die Typprüfer gaben immer einen Punkt pro richtiger Teilantwort zurück und
+  ignorierten die konfigurierten Punkte der Aufgabe. Jetzt wird `max` übergeben
+  und anteilig verteilt.
+- Die Freitext-Kriterien wurden aus `a.kriterien` gelesen, liegen aber unter
+  `a.daten.kriterien`.
+
+Offen:
+
+- Weg A (lokaler Bewertungsdienst) ist geplant, aber noch nicht gebaut. Er
+  braucht einen API-Schlüssel, der nicht ins Repository darf.
+- Station 2 bis 5 tragen noch die alten zwei Fragen und eine Tagebuch-Frage.
+  Sie laufen weiter, sind aber nicht mehr im neuen Umfang.
+- Balancing mit einer echten Klasse steht noch aus.
+

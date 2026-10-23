@@ -25,12 +25,42 @@ Symbolen lässt sich am Ende ein Schloss öffnen.
 1. `index.html` im Browser öffnen (Doppelklick genügt, kein Server nötig).
 2. Gruppe anmelden: Spielfigur wählen, Name eingeben, Aufdruck vom Zettel eintragen.
    10 Startpunkte werden gutgeschrieben.
-3. Die erste Region ist dadurch offen — anklicken und bearbeiten.
-4. Zwei Fragen beantworten — richtig beantwortet deckt die Station farbig auf und bringt
-   das Symbol sowie den Aufdruck der nächsten Station.
-5. Eine Antwort ins Tagebuch schreiben.
-6. Mit dem Aufdruck die nächste Station öffnen, bis alle fünf Symbole beisammen sind.
-7. Das Schloss öffnen und am Ende: Punkte als CSV und das Tagebuch als Text herunterladen.
+3. Die erste Station ist dadurch offen — anklicken und bearbeiten.
+4. Fünf Aufgaben lösen (Multiple Choice, Skizze zuordnen, Richtig/Falsch,
+   Lückentext, Freitext). Jede bringt Punkte.
+5. Mit dem Aufdruck die nächste Station öffnen, bis alle fünf Symbole beisammen sind.
+6. Das Schloss öffnen und am Ende: Punkte als CSV, das Tagebuch als Text und die
+   Freitexte zur Bewertung als JSON herunterladen.
+
+## Die Aufgaben
+
+Jede Station trägt fünf Aufgaben von unterschiedlichem Typ. Die Typen liegen in
+`assets/aufgaben.js`; ein neuer Typ braucht dort einen Eintrag mit Name und
+Prüffunktion, Logik und Oberfläche fragen das Verzeichnis ab.
+
+| Typ | Was die Gruppe tun muss | Punkte |
+|---|---|---|
+| `mc` | Vier Antworten, eine anklicken | 8 |
+| `zuordnung` | Begriffe auf nummerierte Felder einer Skizze ziehen | 8 |
+| `richtig_falsch` | Aussagen einzeln bewerten | 6 |
+| `lueckentext` | Wörter in die Lücken setzen | 8 |
+| `wortgitter` | Buchstaben in ein Raster | 8 |
+| `fehler` | Fehlstellen anklicken | 6 |
+| `freitext` | Antwort schreiben, die bewertet wird | 10 |
+
+Eine halb richtige Lösung bringt Teilpunkte. Eine gelöste Aufgabe bleibt stehen
+und zeigt ihre Erklärung.
+
+## Die Freitext-Bewertung
+
+Eine Freitext-Antwort zählt als gelöst, sobald sie abgeschickt ist. Ihre Punkte
+folgen mit der Bewertung. Zwei Wege:
+
+- **Weg B (empfohlen):** „Freitexte zur Bewertung" lädt eine JSON-Datei mit Gruppe,
+  Station, Frage, Kriterien, Maximum und Antwort herunter. Diese bewerten und das
+  Ergebnis mit „Bewertungen einlesen" zurück ins Spiel laden.
+- **Weg A:** ein lokaler Bewertungsdienst auf einem Rechner, den alle Gruppen
+  erreichen.
 
 ## Die Codekette
 
@@ -103,13 +133,23 @@ per `fetch()` geladen — dadurch funktioniert das Spiel auch per Doppelklick ü
 - [x] Codekette: Startcode auf dem Zettel, jeder gelöste Station liefert den Folgencode
 - [x] Symbole pro Station und Schloss mit Bonuspunkten und Abschluss-Code
 - [x] Lehrkraft-Übersicht zeigt alle Aufdrücke
-- [x] 80 Logik-Tests bestanden (`node scripts/pruefe_kette.js`)
-- [x] Ende-zu-Ende-Durchlauf im Browser: Startcode, Kette, 5 Symbole, Schloss, Auswertung
+- [x] Aufgabentypen-System: sieben Typen mit eigenen Prüffunktionen
+- [x] Fünf Aufgaben pro Station, unterschiedlich je Station
+- [x] Skizzen als SVG (erste: Schichtvulkan im Querschnitt)
+- [x] Freitext-Bewertung über eine Bewertungsdatei (Weg B) — Import und Export
+- [x] CSV: neun Spalten inkl. gelöster Aufgaben und bewerteter Freitexte
+- [x] 181 Prüfungen bestanden (94 Kette + 87 Aufgaben)
+- [x] Ende-zu-Ende-Durchlauf im Browser: alle fünf Typen gelöst, Station offen,
+      Symbol frei, Bewertungsdatei eingelesen, keine Konsolenfehler
+- [ ] Weg A: lokaler Bewertungsdienst (benötigt API-Schlüssel und ein laufendes Skript)
+- [ ] Die übrigen vier Stationen mit den neuen Aufgabentypen füllen
 - [ ] Balancing mit einer echten Klasse prüfen
 
 ## Nächster Schritt
 
-Den Ablauf mit einer echten Klasse testen: 45 Minuten reichen für fünf Stationen
-à 2 Fragen und eine Tagebuch-Frage nur, wenn die Gruppen wirklich in dieser Reihenfolge
-arbeiten. Danach die alten Dateien der ersten Version aufräumen.
+Station 2 bis 5 mit den neuen Aufgabentypen füllen. Station 1 ist der Prototyp:
+sie zeigt, wie die fünf Aufgaben nebeneinander stehen und wie die Station erst
+nach allen fünf aufgedeckt wird. Danach das Zeitbalancing — 45 Minuten reichen
+für fünf Stationen à fünf Aufgaben nur, wenn die Gruppen wirklich in der
+Kartenreihenfolge arbeiten.
 

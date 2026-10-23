@@ -19,7 +19,9 @@ function ladeSkript(rel, globalName) {
 }
 
 const inhalte = ladeSkript('assets/inhalte.js', 'VULKAN_STATIONEN');
+const typen = ladeSkript('assets/aufgaben.js', 'AUFGABEN_TYPEN');
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+const oberflaeche = fs.readFileSync(path.join(ROOT, 'assets/oberflaeche.js'), 'utf8');
 
 function baueUmgebung() {
   const store = {};
@@ -52,6 +54,7 @@ function baueUmgebung() {
   const sandbox = {
     console, localStorage, setTimeout, Date,
     VULKAN_STATIONEN: inhalte,
+    AUFGABEN_TYPEN: typen,
     Blob: class { constructor(t) { this.teile = t; } },
     URL: { createObjectURL: () => 'blob:test', revokeObjectURL() {} },
     document: {
@@ -117,14 +120,60 @@ pruefe('Code einer anderen Region wird abgelehnt',
 
 console.log('\n[3] Kette durchlaufen');
 let erwarteteSymbole = [];
+
+/**
+ * Eine Station generisch loesen. Station 1 traegt Aufgaben neuer Typen,
+ * die uebrigen liefern ihre alten Fragen und Tagebuch-Fragen umgesetzt.
+ * Hier wird nur geprueft, dass die Station aufgedeckt wird und ein Symbol
+ * bringt — die eigentliche Aufgabenpruefung steht in pruefe_aufgaben.js.
+ */
+function loeseStation(regionId) {
+  const list = V.aufgabenVon(regionId);
+  let geloest = 0;
+  list.forEach(function (a) {
+    if (a.typ === 'mc') {
+      const d = a.daten || a;
+      if (V.aufgabePruefen(regionId, a.id, d.richtig).ok) geloest++;
+    } else if (a.typ === 'zuordnung') {
+      const d = a.daten || {};
+      const angabe = {};
+      d.felder.forEach(f => { angabe[f.id] = f.richtig || (d.loesung || {})[f.id]; });
+      if (V.aufgabePruefen(regionId, a.id, angabe).ok) geloest++;
+    } else if (a.typ === 'richtig_falsch') {
+      const d = a.daten || {};
+      const angabe = {};
+      d.aussagen.forEach((s, i) => { angabe[i] = s.richtig; });
+      if (V.aufgabePruefen(regionId, a.id, angabe).ok) geloest++;
+    } else if (a.typ === 'lueckentext') {
+      const d = a.daten || {};
+      const angabe = {};
+      d.loesungen.forEach(l => { angabe[l.id] = l.wort; });
+      if (V.aufgabePruefen(regionId, a.id, angabe).ok) geloest++;
+    } else if (a.typ === 'wortgitter') {
+      const d = a.daten || {};
+      const angabe = {};
+      d.woerter.forEach(w => w.buchstabe.forEach(b => { angabe[b.x + ',' + b.y] = b.richtig; }));
+      if (V.aufgabePruefen(regionId, a.id, angabe).ok) geloest++;
+    } else if (a.typ === 'fehler') {
+      const d = a.daten || {};
+      const angabe = {};
+      d.fehler.forEach(f => { angabe[f.id] = true; });
+      if (V.aufgabePruefen(regionId, a.id, angabe).ok) geloest++;
+    } else if (a.typ === 'freitext') {
+      if (V.freitextSpeichern(regionId, a.id, 'Testantwort der Gruppe Alpha mit genug Text.').ok) geloest++;
+    }
+  });
+  return geloest;
+}
+
 V.REGIONEN.forEach(function (r, i) {
   if (i > 0) {
     const ergebnis = V.codeEinloesen(r.id, V.REGIONEN[i - 1].code_naechste);
     pruefe('Region ' + r.kuerzel + ' mit Code geoeffnet', ergebnis.ok === true, JSON.stringify(ergebnis));
   }
-  r.fragen.forEach(function (fr) {
-    V.frageBeantworten(r.id, fr.id, fr.richtig);
-  });
+  const geloest = loeseStation(r.id);
+  pruefe('Region ' + r.kuerzel + ': alle ' + V.aufgabenVon(r.id).length + ' Aufgaben geloest',
+    geloest === V.aufgabenVon(r.id).length, geloest + ' von ' + V.aufgabenVon(r.id).length);
   erwarteteSymbole.push(r.symbol);
   const anzahl = V.symbole(alpha()).length;
   pruefe('Nach ' + r.kuerzel + ' sind ' + anzahl + ' Symbole', anzahl === i + 1, String(anzahl));
@@ -134,7 +183,8 @@ pruefe('Fortschritt 5 von 5', V.fortschritt(alpha()) === 5, String(V.fortschritt
 pruefe('Symbole in der richtigen Reihenfolge',
       JSON.stringify(V.symbole(alpha()).map(s => s.symbol)) === JSON.stringify(erwarteteSymbole),
       JSON.stringify(V.symbole(alpha()).map(s => s.symbol)));
-pruefe('Punkte 110 nach allen Fragen', alpha().punkte === 110, String(alpha().punkte));
+pruefe('Punkte nach allen Aufgaben: 10 Start + 30 Station 1 + 80 Stationen 2-5 = 120',
+      alpha().punkte === 120, String(alpha().punkte));
 
 console.log('\n[4] Schloss');
 pruefe('Schloss ist bereit', V.schlossBereit(alpha()) === true);
@@ -142,7 +192,7 @@ pruefe('Schloss-Code steht in den Daten', typeof SCHLOSS_CODE === 'string' && SC
 const schloss = V.schlossOeffnen();
 pruefe('Schloss oeffnen klappt', schloss.ok === true, JSON.stringify(schloss));
 pruefe('Bonus wurde gutgeschrieben', schloss.bonus === inhalte.schloss.bonuspunkte, String(schloss.bonus));
-pruefe('Punkte jetzt 120', alpha().punkte === 120, String(alpha().punkte));
+pruefe('Punkte jetzt 130', alpha().punkte === 130, String(alpha().punkte));
 pruefe('Abschluss-Code wird geliefert', schloss.code === SCHLOSS_CODE);
 pruefe('Zweites Oeffnen abgelehnt', V.schlossOeffnen().ok === false);
 
@@ -169,23 +219,31 @@ pruefe('Schloss-Code wird geliefert', u.schlossCode === SCHLOSS_CODE);
 console.log('\n[6] Symbole und Schloss in der Punktetabelle');
 const csv = V.exportCSV();
 const zeilen = csv.trim().split(/\r\n/);
-pruefe('CSV hat 7 Spalten', zeilen[0].split(';').length === 7, zeilen[0]);
+pruefe('CSV hat neun Spalten', zeilen[0].split(';').length === 9, zeilen[0]);
 pruefe('CSV listet Symbole und Schloss',
       zeilen[0].indexOf('Symbole') !== -1 && zeilen[0].indexOf('Schloss geoeffnet') !== -1);
-pruefe('CSV: Alpha hat 5 Regionen, 0 Tagebuch, 5 Symbole, Schloss offen',
-      zeilen.some(z => z.indexOf('Alpha;Vulkanforscherin;120;5;0;5;ja') === 0), zeilen.join(' | '));
+pruefe('CSV: Alpha hat 17 Aufgaben geloest und das Schloss offen',
+      zeilen.some(z => z.indexOf('Alpha;Vulkanforscherin;130;5;17 von 17;5;0;5;ja') === 0),
+      zeilen.join(' | '));
 
-console.log('\n[7] Tagebuch');
-const tb = V.tagebuchSpeichern(V.REGIONEN[0].id, V.REGIONEN[0].tagebuch[0].id, 'Wir packen eine Maske ein.');
-pruefe('Tagebuch-Abgabe ok', tb.ok === true && tb.neu === true);
-pruefe('Tagebuch gibt 5 Punkte', tb.punkte === 5, String(tb.punkte));
-pruefe('Punkte jetzt 125', alpha().punkte === 125, String(alpha().punkte));
-pruefe('Leere Antwort abgelehnt',
-      V.tagebuchSpeichern(V.REGIONEN[0].id, V.REGIONEN[0].tagebuch[0].id, 'kurz').ok === false);
+console.log('\n[7] Freitext');
+const freiId = V.aufgabenVon('hotspot').filter(a => a.typ === 'freitext')[0].id;
+const vorherFreitext = alpha().punkte;
+const tb = V.freitextSpeichern('hotspot', freiId, 'Wir packen eine Maske ein, weil Asche die Atemwege reizt.');
+pruefe('Freitext-Antwort wird uebernommen', tb.ok === true, JSON.stringify(tb));
+pruefe('Freitext-Antwort gibt noch keine Punkte', alpha().punkte === vorherFreitext,
+      String(alpha().punkte));
+const bewertung = V.freitextBewerten('hotspot', freiId, 5, 'Kriterien erfuellt.');
+pruefe('Bewertung gibt Punkte', bewertung.ok === true && bewertung.punkte === 5);
+pruefe('Punkte jetzt 135', alpha().punkte === 135, String(alpha().punkte));
+pruefe('Zu kurze Antwort abgelehnt',
+      V.freitextSpeichern('hotspot', freiId, 'kurz').ok === false);
 pruefe('Tagebuch-Text enthaelt die Antwort', V.exportTagebuch().indexOf('Maske') !== -1);
+pruefe('Tagebuch-Export zeigt die Bewertung', V.exportTagebuch().indexOf('bewertet: 5') !== -1);
 
 console.log('\n[8] Dateien und Verdrahtung');
 pruefe('index.html laedt inhalte.js', html.indexOf('src="assets/inhalte.js"') !== -1);
+pruefe('index.html laedt aufgaben.js', html.indexOf('src="assets/aufgaben.js"') !== -1);
 pruefe('index.html laedt logik.js', html.indexOf('src="assets/logik.js"') !== -1);
 pruefe('index.html laedt oberflaeche.js', html.indexOf('src="assets/oberflaeche.js"') !== -1);
 pruefe('Alte Skripte werden nicht mehr geladen',
@@ -193,6 +251,10 @@ pruefe('Alte Skripte werden nicht mehr geladen',
 pruefe('Kein fetch() im Spiel', html.indexOf('fetch(') === -1);
 pruefe('Startcode-Eingabe vorhanden', html.indexOf('id="startcode"') !== -1);
 pruefe('Schloss-Bereich vorhanden', html.indexOf('id="schlossBox"') !== -1);
+pruefe('Aufgaben-Styles vorhanden', html.indexOf('.kaertchen-item') !== -1);
+pruefe('Freitext-Import wird erzeugt', oberflaeche.indexOf('bewertungImportBtn') !== -1);
+pruefe('Freitext-Export wird erzeugt', oberflaeche.indexOf('freitextHerunterladen') !== -1);
+pruefe('Bewertungsdatei wird eingelesen', oberflaeche.indexOf('freitextImport') !== -1);
 pruefe('Karte enthaelt alle 5 Regions-Gruppen',
       inhalte.regionen.every(r => html.indexOf('id="' + r.svg_id + '"') !== -1));
 const svgStart = html.indexOf('<svg');
@@ -209,12 +271,16 @@ pruefe('Regionspositionen stimmen mit den Daten ueberein',
 
 console.log('\n[9] Inhalte');
 pruefe('5 Regionen geladen', V.REGIONEN.length === 5, String(V.REGIONEN.length));
-pruefe('Jede Region hat 2 Fragen und 1 Tagebuch-Frage',
-      V.REGIONEN.every(r => r.fragen.length === 2 && r.tagebuch.length === 1));
-pruefe('Jede Frage hat 4 Optionen und genau eine richtige',
-      V.REGIONEN.every(r => r.fragen.every(f => f.optionen.length === 4 && f.richtig >= 0 && f.richtig < 4)));
-pruefe('Jede Frage hat eine Erklaerung',
-      V.REGIONEN.every(r => r.fragen.every(f => f.erklaerung && f.erklaerung.length > 40)));
+pruefe('Jede Region hat Aufgaben oder die alten Fragen',
+      V.REGIONEN.every(r => (r.aufgaben && r.aufgaben.length) || (r.fragen && r.fragen.length)));
+pruefe('Jede alte Frage hat 4 Optionen und genau eine richtige',
+      V.REGIONEN.every(r => (r.fragen || []).every(f => f.optionen.length === 4 && f.richtig >= 0 && f.richtig < 4)));
+pruefe('Jede alte Frage hat eine Erklaerung',
+      V.REGIONEN.every(r => (r.fragen || []).every(f => f.erklaerung && f.erklaerung.length > 40)));
+pruefe('Station 1 hat fuenf Aufgaben neuer Typen',
+      V.aufgabenVon('subduktion').length === 5);
+pruefe('Station 1 nutzt mindestens vier verschiedene Typen',
+      new Set(V.aufgabenVon('subduktion').map(a => a.typ)).size >= 4);
 pruefe('Jede Region hat ein Symbol und einen Namen', V.REGIONEN.every(r => r.symbol && r.symbol_name));
 pruefe('Alle fuenf Symbole sind verschieden',
       new Set(V.REGIONEN.map(r => r.symbol)).size === V.REGIONEN.length);
@@ -230,7 +296,7 @@ V.reset();
 pruefe('Nach Reset keine Gruppen', V.gruppen().length === 0);
 pruefe('Nach Reset keine Region offen',
       Object.keys(knoten).every(k => !knoten[k].klassen || !knoten[k].klassen.has('offen')));
-pruefe('Nach Reset leeres Tagebuch', V.tagebuchEintraege().length === 0);
+pruefe('Nach Reset keine Freitexte', V.freitextEintraege().length === 0);
 
 console.log('\n----------------------------------------');
 console.log('Bestanden: ' + bestanden + '  |  Fehlgeschlagen: ' + fehler);

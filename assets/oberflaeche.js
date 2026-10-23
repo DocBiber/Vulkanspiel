@@ -141,14 +141,15 @@
     }
 
     var offen = f.offen;
-    var richtige = V.richtigeInRegion(g, r.id);
+    var list = V.aufgabenVon(r.id);
+    var geloeste = V.geloesteInRegion(g, r.id);
 
     var html = '<h3>' + esc(r.name) + '</h3>' +
-      '<p class="ort">' + esc(r.kuerzel) + ' · Fortschritt: ' + richtige + ' von ' +
-      r.fragen.length + ' Fragen richtig</p>';
+      '<p class="ort">' + esc(r.kuerzel) + ' · Fortschritt: ' + geloeste + ' von ' +
+      list.length + ' Aufgaben geloest</p>';
 
     if (offen) {
-      html += '<p class="ok">Region aufgedeckt. Die Fragen bleiben zum Nachlesen offen.</p>';
+      html += '<p class="ok">Station aufgedeckt. Die Aufgaben bleiben zum Nachlesen offen.</p>';
       // Das Symbol der Station und der Code der naechsten Station.
       html += '<div class="stationszettel">' +
         '<div class="stationssymbol" title="' + esc(r.symbol_name) + '">' + esc(r.symbol) + '</div>' +
@@ -167,70 +168,415 @@
           'könnt ihr jetzt das Schloss öffnen.</p>';
       }
       html += '</div></div>';
-    } else if (richtige > 0) {
-      html += '<p class="hinweis">Schon ' + richtige + ' von ' + r.fragen.length +
-        ' Fragen richtig. Beantwortet alle Fragen richtig, um die Region aufzudecken.</p>';
+    } else if (geloeste > 0) {
+      html += '<p class="hinweis">Schon ' + geloeste + ' von ' + list.length +
+        ' Aufgaben geloest. Loeset alle Aufgaben, um die Station aufzudecken.</p>';
     }
 
-    html += '<div class="fragen">';
-
-    r.fragen.forEach(function (fr, i) {
-      var e = f.fragen[fr.id];
-      html += '<div class="frage' + (e && e.richtig ? ' richtig' : '') + '">' +
-        '<p class="fragentext"><strong>Frage ' + (i + 1) + ':</strong> ' + esc(fr.frage) + '</p>';
-      html += '<div class="optionen">';
-      fr.optionen.forEach(function (opt, j) {
-        var klasse = '';
-        if (e && e.richtig) {
-          klasse = j === fr.richtig ? ' richtig' : '';
-        } else if (e && e.auswahl === j) {
-          klasse = ' falsch';
-        }
-        html += '<button type="button" class="option' + klasse + '" data-region="' + esc(r.id) +
-          '" data-frage="' + esc(fr.id) + '" data-auswahl="' + j + '"' +
-          (e && e.richtig ? ' disabled' : '') + '>' + esc(opt) + '</button>';
-      });
-      html += '</div>';
-      if (e && e.richtig && fr.erklaerung) {
-        html += '<p class="erklaerung">Erklaerung: ' + esc(fr.erklaerung) + '</p>';
-      }
-      html += '</div>';
+    html += '<div class="aufgaben">';
+    list.forEach(function (a, i) {
+      html += aufgabeHtml(r, a, f.aufgaben[a.id], i);
     });
-
     html += '</div>';
 
-    // Tagebuch-Frage der Region
-    r.tagebuch.forEach(function (tf) {
-      var e = f.tagebuch[tf.id];
-      html += '<div class="tagebuch-frage">' +
-        '<p class="fragentext"><strong>Tagebuch:</strong> ' + esc(tf.frage) + '</p>' +
-        '<textarea id="tagebuch-' + esc(tf.id) + '" rows="3" placeholder="Eure Antwort ...">' +
-        esc(e && e.text ? e.text : '') + '</textarea>' +
-        '<div class="tagebuch-aktionen">' +
-        '<button type="button" data-tagebuch="' + esc(r.id) + '|' + esc(tf.id) + '">Antwort speichern (+' +
-        V.PUNKTE.TAGEBUCH_ABGABE + ' Punkte)</button>' +
-        (e && e.text ? '<span class="ok">Gespeichert.</span>' : '') +
-        '</div></div>';
-    });
-
     html += '<p class="hinweis">Klickt auf eine andere Region, um weiterzuerkunden. ' +
-      'Das Tagebuch sammelt eure Antworten.</p>';
+      'Das Tagebuch sammelt eure Freitext-Antworten.</p>';
 
     var box = $('regionsbereich');
     box.innerHTML = html;
     box.setAttribute('data-region', regionId);
     box.classList.add('sichtbar');
+    verteileAufgaben(box);
+  }
 
-    box.querySelectorAll('button.option').forEach(function (b) {
-      b.addEventListener('click', function () {
-        antworten(b.getAttribute('data-region'), b.getAttribute('data-frage'),
-          Number(b.getAttribute('data-auswahl')), b);
+  // ---------- Aufgabenrenderer ----------
+
+  function skizzen() {
+    return (window.VULKAN_STATIONEN && window.VULKAN_STATIONEN.skizzen) || {};
+  }
+
+  function typName(typ) {
+    var T = window.AUFGABEN_TYPEN || {};
+    return (T[typ] && T[typ].name) ? T[typ].name : typ;
+  }
+
+  function absendeText(typ) {
+    if (typ === 'freitext') return 'Antwort abschicken';
+    if (typ === 'zuordnung' || typ === 'lueckentext') return 'Pruefen';
+    return 'Absenden';
+  }
+
+  /** Der Anzeigetext einer Aufgabe, inklusive ihres Typs. */
+  function aufgabeHtml(r, a, e, i) {
+    var typ = a.typ || 'mc';
+    var geloest = !!(e && e.geloest);
+    var html = '<div class="aufgabe aufgabe-' + esc(typ) + (geloest ? ' geloest' : '') + '"' +
+      ' data-region="' + esc(r.id) + '" data-aufgabe="' + esc(a.id) + '">';
+    html += '<p class="fragentext"><strong>Aufgabe ' + (i + 1) + ' · ' + esc(typName(typ)) +
+      ':</strong> ' + esc(a.frage) + '</p>';
+
+    if (geloest) {
+      html += '<p class="ok">' + esc((e && e.hinweis) || 'Geloest.') +
+        ' (+' + ((e && e.punkte) || 0) + ' Punkte)</p>';
+      if (typ === 'mc') {
+        var d = a.daten || a;
+        if (d.erklaerung) {
+          html += '<p class="erklaerung">Erklaerung: ' + esc(d.erklaerung) + '</p>';
+        }
+      }
+      html += '</div>';
+      return html;
+    }
+
+    if (typ === 'mc') html += mcHtml(a);
+    else if (typ === 'zuordnung') html += zuordnungHtml(a);
+    else if (typ === 'richtig_falsch') html += richtigFalschHtml(a);
+    else if (typ === 'lueckentext') html += lueckentextHtml(a);
+    else if (typ === 'wortgitter') html += wortgitterHtml(a);
+    else if (typ === 'fehler') html += fehlerHtml(a);
+    else if (typ === 'freitext') html += freitextHtml(r, a, e);
+    else html += '<p class="hinweis">Dieser Aufgabentyp wird nicht angezeigt: ' + esc(typ) + '</p>';
+
+    html += '<div class="aufgabe-aktionen">' +
+      '<button type="button" class="absenden" data-absenden="' + esc(r.id) + '|' + esc(a.id) + '">' +
+      esc(absendeText(typ)) + '</button>' +
+      '<span class="fehler" data-fehler="' + esc(r.id) + '|' + esc(a.id) + '"></span>' +
+      '</div>';
+
+    if (e && e.hinweis) {
+      html += '<p class="hinweis">' + esc(e.hinweis) + '</p>';
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  function mcHtml(a) {
+    var d = a.daten || a;
+    var html = '<div class="optionen">';
+    d.optionen.forEach(function (opt, j) {
+      html += '<button type="button" class="option" data-wahl="' + j + '">' + esc(opt) + '</button>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function zuordnungHtml(a) {
+    var d = a.daten || {};
+    var sk = skizzen()[d.skizze];
+    var html = '';
+
+    if (sk) {
+      html += '<div class="skizze-wrap"><svg viewBox="' + esc(sk.viewBox) + '" role="img" aria-label="' +
+        esc(sk.name) + '">' + sk.svg;
+      d.felder.forEach(function (f) {
+        html += '<g class="feld" data-feld="' + esc(f.id) + '" transform="translate(' + f.x + ',' + f.y + ')">' +
+          '<circle r="40" class="feld-kreis" />' +
+          '<text class="feld-text" y="8">' + esc(f.id) + '</text></g>';
+      });
+      html += '</svg></div>';
+    } else {
+      html += '<div class="zuordnung-felder">';
+      d.felder.forEach(function (f) {
+        html += '<div class="feld-fallback" data-feld="' + esc(f.id) + '">' + esc(f.id) + '</div>';
+      });
+      html += '</div>';
+    }
+
+    html += '<div class="kaertchen">';
+    d.begriffe.forEach(function (b) {
+      html += '<span class="kaertchen-item" draggable="true" data-begriff="' + esc(b) + '">' +
+        esc(b) + '</span>';
+    });
+    html += '</div>';
+    html += '<p class="hinweis">Zieht jeden Begriff auf das richtige Feld der Skizze. ' +
+      'Ein Klick auf ein belegtes Feld nimmt den Begriff wieder zurueck.</p>';
+    return html;
+  }
+
+  function richtigFalschHtml(a) {
+    var d = a.daten || {};
+    var html = '<div class="aussagen">';
+    d.aussagen.forEach(function (s, i) {
+      html += '<div class="aussage" data-aussage="' + i + '">' +
+        '<p>' + esc(s.text) + '</p>' +
+        '<div class="aussage-knoepfe">' +
+        '<button type="button" class="aussage-btn" data-wert="1">stimmt</button>' +
+        '<button type="button" class="aussage-btn" data-wert="0">stimmt nicht</button>' +
+        '</div></div>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function lueckentextHtml(a) {
+    var d = a.daten || {};
+    var text = esc(d.text || '');
+    // Die Luecken [1], [2], ... werden zu anklickbaren Stellen.
+    text = text.replace(/\[(\d+)\]/g, function (_, n) {
+      return '<button type="button" class="luecke" data-luecke="' + n + '">[' + n + ']</button>';
+    });
+
+    var wuerfel = [];
+    if (window.AUFGABEN_TYPEN && window.AUFGABEN_TYPEN.wuerfel) {
+      wuerfel = window.AUFGABEN_TYPEN.wuerfel(d);
+    }
+
+    var html = '<p class="lueckentext">' + text + '</p><div class="kaertchen">';
+    wuerfel.forEach(function (w) {
+      html += '<span class="kaertchen-item" draggable="true" data-begriff="' + esc(w) + '">' +
+        esc(w) + '</span>';
+    });
+    html += '</div><p class="hinweis">Klickt ein Wort an und danach die Luecke, in die es ' +
+      'passt. Ein Klick auf eine gefuellte Luecke leert sie wieder.</p>';
+    return html;
+  }
+
+  function wortgitterHtml(a) {
+    var d = a.daten || {};
+    var breite = d.breite || 6, hoehe = d.hoehe || 6;
+    var html = '<div class="wortgitter" style="grid-template-columns:repeat(' + breite +
+      ',minmax(2.1rem,2.6rem))">';
+    for (var y = 0; y < hoehe; y++) {
+      for (var x = 0; x < breite; x++) {
+        html += '<input class="gitter-zelle" data-x="' + x + '" data-y="' + y + '" maxlength="1" ' +
+          'autocomplete="off" aria-label="Feld ' + x + ',' + y + '">';
+      }
+    }
+    html += '</div><ol class="gitter-hinweise">';
+    (d.woerter || []).forEach(function (w, i) {
+      html += '<li>' + esc(w.hinweis || ('Wort ' + (i + 1))) + '</li>';
+    });
+    html += '</ol>';
+    return html;
+  }
+
+  function fehlerHtml(a) {
+    var d = a.daten || {};
+    var teile = String(d.text || '').split(/(\[\w+\])/g);
+    var html = '<p class="fehler-text">';
+    teile.forEach(function (t) {
+      var m = t.match(/^\[(\w+)\]$/);
+      if (m) {
+        html += '<span class="fehler-stelle" data-fehler-id="' + esc(m[1]) + '">[' + esc(m[1]) + ']</span>';
+      } else {
+        html += esc(t);
+      }
+    });
+    html += '</p><p class="hinweis">Klickt die Stellen an, die eurer Meinung nach einen Fehler ' +
+      'enthalten. Ihr findet ' + (d.fehler || []).length + ' Fehler.</p>';
+    return html;
+  }
+
+  function freitextHtml(r, a, e) {
+    var d = a.daten || {};
+    var html = '<textarea class="freitext" data-freitext="' + esc(a.id) + '" rows="4" ' +
+      'placeholder="Eure Antwort ...">' + esc((e && e.angabe) || '') + '</textarea>';
+    if (d.kriterien && d.kriterien.length) {
+      html += '<div class="kriterien"><p><strong>Bei der Bewertung zaehlt:</strong></p><ul>';
+      d.kriterien.forEach(function (k) { html += '<li>' + esc(k) + '</li>'; });
+      html += '</ul></div>';
+    }
+    return html;
+  }
+
+  // ---------- Eingaben sammeln ----------
+
+  /** Die bisher eingetippten Angaben, Schlussel "regionId|aufgabeId". */
+  var angaben = {};
+
+  function schluessel(regionId, aufgabeId) {
+    return regionId + '|' + aufgabeId;
+  }
+
+  function angabeFuer(r, a, e) {
+    var key = schluessel(r.id, a.id);
+    if (!(key in angaben)) {
+      var gespeichert = e && e.angabe;
+      angaben[key] = (gespeichert && typeof gespeichert === 'object') ? Object.assign({}, gespeichert) : null;
+    }
+    return angaben[key];
+  }
+
+  function feldBelegen(box, aufgabeId, feldId, begriff) {
+    // Zeigt den eingetragenen Begriff im Feld der Skizze an.
+    var feld = box.querySelector('.feld[data-feld="' + feldId + '"] .feld-text');
+    if (feld) feld.textContent = begriff ? begriff : feldId;
+  }
+
+  function lueckeFuellen(box, aufgabeId, luecke, begriff) {
+    var el = box.querySelector('.luecke[data-luecke="' + luecke + '"]');
+    if (el) el.textContent = begriff ? begriff : ('[' + luecke + ']');
+  }
+
+  /** Verdraengt die Kaertchen, die bereits untergebracht sind. */
+  function kaertchenAktualisieren(box, aufgabeId, typ) {
+    var belegt = {};
+    if (typ === 'zuordnung') {
+      var ang = angaben[aufgabeId] || {};
+      Object.keys(ang).forEach(function (k) { if (ang[k]) belegt[ang[k]] = true; });
+    } else {
+      var ang2 = angaben[aufgabeId] || {};
+      Object.keys(ang2).forEach(function (k) { if (ang2[k]) belegt[ang2[k]] = true; });
+    }
+    box.querySelectorAll('.aufgabe[data-aufgabe="' + aufgabeId + '"] .kaertchen-item').forEach(function (chip) {
+      var wort = chip.getAttribute('data-begriff');
+      chip.classList.toggle('belegt', !!belegt[wort]);
+      chip.setAttribute('draggable', belegt[wort] ? 'false' : 'true');
+    });
+  }
+
+  /** Die Eingaben einer Aufgabe an die Logik uebergeben. */
+  function absenden(regionId, aufgabeId, box) {
+    var r = V.REGIONEN.filter(function (x) { return x.id === regionId; })[0];
+    var a = V.aufgabenVon(regionId).filter(function (x) { return x.id === aufgabeId; })[0];
+    var key = schluessel(regionId, aufgabeId);
+    if (!r || !a) return;
+
+    var angabe;
+    if (a.typ === 'freitext') {
+      var feld = box.querySelector('[data-freitext="' + aufgabeId + '"]');
+      angabe = feld ? feld.value : '';
+    } else if (a.typ === 'mc') {
+      angabe = (angaben[key] === null || angaben[key] === undefined) ? undefined : angaben[key];
+    } else {
+      angabe = angaben[key] || {};
+    }
+
+    var hinweis = box.querySelector('[data-fehler="' + regionId + '|' + aufgabeId + '"]');
+
+    if (a.typ === 'freitext') {
+      var ergebnis = V.freitextSpeichern(regionId, aufgabeId, angabe);
+      if (!ergebnis.ok) {
+        if (hinweis) hinweis.textContent = ergebnis.fehler;
+        return;
+      }
+      zeichne();
+      zeigeRegion(regionId);
+      return;
+    }
+
+    var e = V.aufgabePruefen(regionId, aufgabeId, angabe);
+    if (!e.ok) {
+      if (hinweis) hinweis.textContent = e.hinweis || e.fehler || 'Noch nicht richtig, versucht es erneut.';
+      return;
+    }
+    zeichne();
+    zeigeRegion(regionId);
+  }
+
+  /** Knoepfe, Ziehen und Tippen einer Station anschliessen. */
+  function verteileAufgaben(box) {
+    // Multiple Choice: Klick auf eine Option schickt direkt ab.
+    box.querySelectorAll('.aufgabe-auf-mc, .aufgabe-mc').forEach(function () {});
+    box.querySelectorAll('.aufgabe').forEach(function (el) {
+      var regionId = el.getAttribute('data-region');
+      var aufgabeId = el.getAttribute('data-aufgabe');
+      var key = schluessel(regionId, aufgabeId);
+
+      el.querySelectorAll('button.option').forEach(function (b) {
+        b.addEventListener('click', function () {
+          angaben[key] = Number(b.getAttribute('data-wahl'));
+          absenden(regionId, aufgabeId, box);
+        });
+      });
+
+      // Richtig/Falsch
+      el.querySelectorAll('.aussage-btn').forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (!angaben[key]) angaben[key] = {};
+          angaben[key][b.parentNode.parentNode.getAttribute('data-aussage')] =
+            b.getAttribute('data-wert') === '1';
+          b.parentNode.querySelectorAll('.aussage-btn').forEach(function (x) { x.classList.remove('gewaehlt'); });
+          b.classList.add('gewaehlt');
+        });
+      });
+
+      // Lueckentext: Wort waehlen, dann Luecke
+      var offenesWort = { wort: null };
+      el.querySelectorAll('.lueckentext .kaertchen-item, .aufgabe-lueckentext .kaertchen-item').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          el.querySelectorAll('.kaertchen-item').forEach(function (c) { c.classList.remove('markiert'); });
+          chip.classList.add('markiert');
+          offenesWort.wort = chip.getAttribute('data-begriff');
+        });
+        chip.addEventListener('dragstart', function (ev) {
+          ev.dataTransfer.setData('text/plain', chip.getAttribute('data-begriff'));
+          offenesWort.wort = chip.getAttribute('data-begriff');
+        });
+      });
+      el.querySelectorAll('.luecke').forEach(function (luecke) {
+        luecke.addEventListener('click', function () {
+          if (!angaben[key]) angaben[key] = {};
+          var lueckenId = luecke.getAttribute('data-luecke');
+          if (angaben[key][lueckenId]) {
+            // Klick auf eine gefuellte Luecke leert sie.
+            angaben[key][lueckenId] = '';
+            lueckeFuellen(box, aufgabeId, lueckenId, '');
+          } else if (offenesWort.wort) {
+            angaben[key][lueckenId] = offenesWort.wort;
+            lueckeFuellen(box, aufgabeId, lueckenId, offenesWort.wort);
+            offenesWort.wort = null;
+          }
+          kaertchenAktualisieren(box, aufgabeId, 'lueckentext');
+        });
+      });
+
+      // Zuordnung: Wort auf ein Feld der Skizze ziehen oder klicken
+      var offenesFeldWort = { wort: null };
+      el.querySelectorAll('.kaertchen-item').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          el.querySelectorAll('.kaertchen-item').forEach(function (c) { c.classList.remove('markiert'); });
+          chip.classList.add('markiert');
+          offenesFeldWort.wort = chip.getAttribute('data-begriff');
+        });
+        chip.addEventListener('dragstart', function (ev) {
+          ev.dataTransfer.setData('text/plain', chip.getAttribute('data-begriff'));
+        });
+      });
+      el.querySelectorAll('.feld, .feld-fallback').forEach(function (feld) {
+        var feldId = feld.getAttribute('data-feld');
+        feld.addEventListener('click', function () {
+          if (!angaben[key]) angaben[key] = {};
+          if (angaben[key][feldId]) {
+            angaben[key][feldId] = '';
+            feldBelegen(box, aufgabeId, feldId, '');
+          } else if (offenesFeldWort.wort) {
+            angaben[key][feldId] = offenesFeldWort.wort;
+            feldBelegen(box, aufgabeId, feldId, offenesFeldWort.wort);
+            offenesFeldWort.wort = null;
+          }
+          kaertchenAktualisieren(box, aufgabeId, 'zuordnung');
+        });
+        feld.addEventListener('dragover', function (ev) {
+          ev.preventDefault();
+          ev.dataTransfer.dropEffect = 'move';
+        });
+        feld.addEventListener('drop', function (ev) {
+          ev.preventDefault();
+          var begriff = ev.dataTransfer.getData('text/plain');
+          if (!begriff) return;
+          if (!angaben[key]) angaben[key] = {};
+          angaben[key][feldId] = begriff;
+          feldBelegen(box, aufgabeId, feldId, begriff);
+          kaertchenAktualisieren(box, aufgabeId, 'zuordnung');
+        });
+      });
+
+      // Wortgitter: Buchstaben einsammeln
+      el.querySelectorAll('.gitter-zelle').forEach(function (zelle) {
+        zelle.addEventListener('input', function () {
+          if (!angaben[key]) angaben[key] = {};
+          var b = zelle.value.trim().charAt(0);
+          angaben[key][zelle.getAttribute('data-x') + ',' + zelle.getAttribute('data-y')] = b ? b.toUpperCase() : '';
+        });
       });
     });
-    box.querySelectorAll('button[data-tagebuch]').forEach(function (b) {
+
+    box.querySelectorAll('button[data-absenden]').forEach(function (b) {
       b.addEventListener('click', function () {
-        var teile = b.getAttribute('data-tagebuch').split('|');
-        tagebuchAbspeichern(teile[0], teile[1]);
+        var teile = b.getAttribute('data-absenden').split('|');
+        absenden(teile[0], teile[1], box);
       });
     });
   }
@@ -253,64 +599,22 @@
     zeigeRegion(regionId);
   }
 
-  function antworten(regionId, frageId, auswahl, knopf) {
-    var ergebnis = V.frageBeantworten(regionId, frageId, auswahl);
-
-    if (!ergebnis.ok) {
-      // Falsche Antwort: nur markieren und hinweisen. Der Bereich bleibt stehen,
-      // damit der Hinweis sichtbar bleibt und die Gruppe erneut antworten kann.
-      if (knopf) knopf.classList.add('falsch');
-      var hinweis = $('regionsbereich-hinweis');
-      if (!hinweis) {
-        hinweis = document.createElement('p');
-        hinweis.id = 'regionsbereich-hinweis';
-        hinweis.className = 'hinweis';
-        var box = $('regionsbereich');
-        box.insertBefore(hinweis, box.firstChild);
-      }
-      hinweis.textContent = ergebnis.fehler || 'Nicht richtig, versucht es erneut.';
-      return;
-    }
-
-    zeichne();
-    zeigeRegion(regionId);
-  }
-
-  function tagebuchAbspeichern(regionId, frageId) {
-    var feld = $('tagebuch-' + frageId);
-    var ergebnis = V.tagebuchSpeichern(regionId, frageId, feld ? feld.value : '');
-    if (!ergebnis.ok) {
-      // Einzeilige Meldung im Spiel statt eines Dialogs: Ein alert blockiert den
-      // Browser und stoppt damit auch die Klasse mitten in der Stunde.
-      var box = $('regionsbereich');
-      var hinweis = $('tagebuch-hinweis');
-      if (!hinweis) {
-        hinweis = document.createElement('p');
-        hinweis.id = 'tagebuch-hinweis';
-        hinweis.className = 'hinweis';
-        box.insertBefore(hinweis, box.firstChild);
-      }
-      hinweis.textContent = ergebnis.fehler;
-      return;
-    }
-    zeichne();
-    zeigeRegion(regionId);
-  }
-
   // ---------- Tagebuch ----------
 
   function zeichneTagebuch() {
     var box = $('tagebuchBox');
-    var eintraege = V.tagebuchEintraege();
+    var eintraege = V.freitextEintraege();
     if (!eintraege.length) {
-      box.innerHTML = '<p class="hinweis">Noch keine Tagebuch-Eintraege. ' +
-        'Beantwortet in einer Region eine Tagebuch-Frage, dann erscheint sie hier.</p>';
+      box.innerHTML = '<p class="hinweis">Noch keine Freitext-Antworten. ' +
+        'Schreibt in einer Station eine Antwort, dann erscheint sie hier.</p>';
       return;
     }
-    var html = '<table><thead><tr><th>Gruppe</th><th>Region</th><th>Frage</th><th>Antwort</th></tr></thead><tbody>';
+    var html = '<table><thead><tr><th>Gruppe</th><th>Station</th><th>Frage</th>' +
+      '<th>Antwort</th><th>Bewertung</th></tr></thead><tbody>';
     eintraege.forEach(function (e) {
       html += '<tr><td>' + esc(e.gruppe) + '</td><td>' + esc(e.region) + '</td><td>' +
-        esc(e.frage) + '</td><td>' + esc(e.antwort) + '</td></tr>';
+        esc(e.frage) + '</td><td>' + esc(e.antwort) + '</td><td>' +
+        (e.bewertet ? e.punkte + ' von ' + e.max + ' Punkten' : 'noch offen') + '</td></tr>';
     });
     html += '</tbody></table>';
     box.innerHTML = html;
@@ -326,38 +630,56 @@
       return;
     }
     var html = '<table><thead><tr><th>Gruppe</th><th>Figur</th><th>Punkte</th>' +
-      '<th>Regionen</th><th>Symbole</th><th>Tagebuch</th><th>Schloss</th></tr></thead><tbody>';
+      '<th>Stationen</th><th>Aufgaben</th><th>Freitext</th>' +
+      '<th>Symbole</th><th>Schloss</th></tr></thead><tbody>';
     gruppen.slice().sort(function (a, b) { return b.punkte - a.punkte; }).forEach(function (g, i) {
-      var eintraege = 0;
+      var freitext = 0, bewertet = 0, aufgaben = 0, maxAufgaben = 0;
       V.REGIONEN.forEach(function (r) {
         var f = g.regionen[r.id];
         if (!f) return;
-        r.tagebuch.forEach(function (tf) {
-          if (f.tagebuch[tf.id] && f.tagebuch[tf.id].text) eintraege++;
+        var list = V.aufgabenVon(r.id);
+        maxAufgaben += list.length;
+        list.forEach(function (a) {
+          var e = f.aufgaben[a.id];
+          if (e && e.geloest) {
+            aufgaben++;
+            if (a.typ === 'freitext') {
+              freitext++;
+              if (e.bewertet) bewertet++;
+            }
+          }
         });
       });
       html += '<tr><td>' + (i === 0 ? '★ ' : '') + esc(g.name) + '</td><td>' +
         esc(g.symbol) + ' ' + esc(g.figurName) + '</td><td>' + g.punkte + '</td><td>' +
         V.fortschritt(g) + '/' + V.REGIONEN.length + '</td><td>' +
-        V.symbole(g).length + '/' + V.REGIONEN.length + '</td><td>' + eintraege + '</td><td>' +
+        aufgaben + '/' + maxAufgaben + '</td><td>' + freitext + ' (' + bewertet + ' bewertet)</td><td>' +
+        V.symbole(g).length + '/' + V.REGIONEN.length + '</td><td>' +
         (g.schlossAuf ? 'geoeffnet' : '—') + '</td></tr>';
     });
     html += '</tbody></table>';
 
-    var eintraege = V.tagebuchEintraege().length;
+    var freitexte = V.freitextEintraege().length;
+    var offen = V.freitextOffen().length;
     html += '<div class="exportaktionen">' +
       '<button type="button" id="csvHerunterladen">Punkte als CSV</button>' +
-      (eintraege ? '<button type="button" id="tagebuchHerunterladen">Tagebuch herunterladen</button>' : '') +
+      (freitexte ? '<button type="button" id="tagebuchHerunterladen">Tagebuch herunterladen</button>' : '') +
+      (offen ? '<button type="button" id="freitextHerunterladen">Freitexte zur Bewertung (' + offen + ')</button>' : '') +
       '<button type="button" id="csvVorschauBtn">CSV anzeigen</button>' +
       '<button type="button" id="lehrkraftUebersichtBtn">Lehrkraft: Codes anzeigen</button>' +
+      '<button type="button" id="bewertungImportBtn">Bewertungen einlesen</button>' +
       '<button type="button" id="spielZuruecksetzen">Spiel zuruecksetzen</button>' +
-      '</div><pre id="csvVorschau" style="display:none"></pre>' +
-      '<pre id="lehrkraftVorschau" style="display:none"></pre>';
+      '</div><input type="file" id="bewertungDatei" accept="application/json" style="display:none">' +
+      '<pre id="csvVorschau" style="display:none"></pre>' +
+      '<pre id="lehrkraftVorschau" style="display:none"></pre>' +
+      '<p class="hinweis" id="importHinweis"></p>';
     box.innerHTML = html;
 
     $('csvHerunterladen').addEventListener('click', function () { download(V.csvBlob(), 'vulkanspiel_punkte.csv'); });
     var tb = $('tagebuchHerunterladen');
     if (tb) tb.addEventListener('click', function () { download(V.tagebuchBlob(), 'vulkanspiel_tagebuch.txt'); });
+    var ft = $('freitextHerunterladen');
+    if (ft) ft.addEventListener('click', function () { download(V.freitextBlob(), 'vulkanspiel_freitexte.json'); });
     $('csvVorschauBtn').addEventListener('click', function () {
       var pre = $('csvVorschau');
       if (pre.style.display === 'none') { pre.textContent = V.exportCSV(); pre.style.display = 'block'; }
@@ -367,6 +689,29 @@
       var pre = $('lehrkraftVorschau');
       if (pre.style.display === 'none') { pre.textContent = lehrkraftText(); pre.style.display = 'block'; }
       else { pre.style.display = 'none'; pre.textContent = ''; }
+    });
+    $('bewertungImportBtn').addEventListener('click', function () {
+      $('bewertungDatei').click();
+    });
+    $('bewertungDatei').addEventListener('change', function (ev) {
+      var datei = ev.target.files && ev.target.files[0];
+      if (!datei) return;
+      var leser = new FileReader();
+      leser.onload = function () {
+        var ergebnis = V.freitextImport(String(leser.result || ''));
+        var hinweis = $('importHinweis');
+        if (!hinweis) return;
+        if (!ergebnis.ok) {
+          hinweis.textContent = ergebnis.fehler;
+          return;
+        }
+        var text = ergebnis.eingetragen + ' Bewertung(en) eingetragen.';
+        if (ergebnis.fehler.length) text += ' Nicht zugeordnet: ' + ergebnis.fehler.join(' · ');
+        hinweis.textContent = text;
+        zeichne();
+      };
+      leser.readAsText(datei);
+      ev.target.value = '';
     });
     $('spielZuruecksetzen').addEventListener('click', function () {
       if (window.confirm('Wirklich alle Gruppen, Punkte, Regionen, Symbole und Tagebuch-Eintraege loeschen?')) {
@@ -502,9 +847,9 @@
     var status = $('kartenStatus');
     if (g) {
       status.textContent = g.name + ' · ' + g.punkte + ' Punkte · ' +
-        V.fortschritt(g) + ' von ' + V.REGIONEN.length + ' Regionen aufgedeckt · ' +
+        V.fortschritt(g) + ' von ' + V.REGIONEN.length + ' Stationen aufgedeckt · ' +
         V.symbole(g).length + ' von ' + V.REGIONEN.length + ' Symbolen. ' +
-        'Klickt eine Region auf der Karte an.';
+        'Klickt eine Station auf der Karte an.';
     } else {
       status.textContent = 'Bitte zuerst eine Gruppe anmelden, eine Spielfigur waehlen und den Aufdruck vom Zettel eintragen.';
     }
@@ -528,10 +873,10 @@
 
   function init() {
     // Versionsanzeige: Damit ist sofort erkennbar, ob der Browser die aktuelle
-    // Datei geladen hat. In Version 4 gibt es die Codekette und das Schloss.
+    // Datei geladen hat. In Version 5 gibt es Aufgabentypen und Freitext-Bewertung.
     var anzeige = $('versionsanzeige');
     if (anzeige) {
-      anzeige.textContent = 'Version ' + V.inhaltVersion + ' · Codekette';
+      anzeige.textContent = 'Version ' + V.inhaltVersion + ' · Aufgabentypen';
     }
 
     zeichneFigurwahl();

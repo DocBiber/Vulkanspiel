@@ -12,12 +12,14 @@ Weltkarte ist das Spielfeld, jede richtige Antwort deckt eine Region auf.
 1. `index.html` im Browser öffnen (Doppelklick genügt, kein Server nötig).
 2. Gruppe anmelden: Spielfigur wählen, Name eingeben, den Aufdruck vom Zettel eintragen.
    10 Startpunkte werden gutgeschrieben.
-3. Die erste Region ist dadurch offen — anklicken und bearbeiten.
-4. Zwei Fragen beantworten — richtig beantwortet deckt die Station farbig auf und bringt
-   das Symbol sowie den Aufdruck der nächsten Station.
-5. Eine Antwort ins Tagebuch schreiben.
+3. Die erste Station ist dadurch offen — anklicken und bearbeiten.
+4. Fünf Aufgaben lösen: Multiple Choice, Begriffe auf eine Skizze ziehen,
+   Richtig/Falsch, Lückentext, Freitext. Jede bringt Punkte.
+5. Sind alle fünf gelöst, wird die Station farbig aufgedeckt und bringt das Symbol
+   sowie den Aufdruck der nächsten Station.
 6. Mit dem Aufdruck die nächste Station öffnen, bis alle fünf Symbole beisammen sind.
-7. Das Schloss öffnen und am Ende: Punkte als CSV und das Tagebuch als Text herunterladen.
+7. Das Schloss öffnen und am Ende: Punkte als CSV, das Tagebuch als Text und die
+   Freitexte zur Bewertung als JSON herunterladen.
 
 Die ausführlichen Regeln stehen in [REGELN.md](REGELN.md).
 
@@ -34,9 +36,9 @@ Die Aufdrucke stehen in `assets/inhalte.js` (`startcode`, `code_naechste`, `schl
 und lassen sich dort ändern. Die Lehrkraft sieht alle Aufdrücke über
 „Lehrkraft: Codes anzeigen“ im Abschnitt Auswertung.
 
-## Die fünf Regionen
+## Die fünf Stationen
 
-| Nr. | Kürzel | Region | Symbol | Thema |
+| Nr. | Kürzel | Station | Symbol | Thema |
 |---|---|---|---|---|
 | 1 | SUB | Subduktionszonen des Pazifiks | 🌋 Vulkan | Schichtvulkan, explosiver Vulkanismus |
 | 2 | HOT | Hawaii-Hot-Spot | 🌊 Welle | Schildvulkan, effusiver Vulkanismus |
@@ -44,46 +46,82 @@ und lassen sich dort ändern. Die Lehrkraft sieht alle Aufdrücke über
 | 4 | LIP | Deccan-Trapp, Indien | 🪨 Gestein | Vulkanische Decken, Klimawirkung |
 | 5 | RISIKO | Nyiragongo und Goma | 🔥 Feuer | Risiko, Exposition, Vulnerabilität |
 
+## Aufgaben
+
+Jede Station trägt fünf Aufgaben von unterschiedlichem Typ. Die Gruppe arbeitet
+sie der Reihe nach durch; eine halb richtige Lösung bringt Teilpunkte.
+
+| Typ | Was die Gruppe tun muss | Punkte |
+|---|---|---|
+| `mc` | Vier Antworten, eine anklicken | 8 |
+| `zuordnung` | Begriffe auf nummerierte Felder einer Skizze ziehen | 8 |
+| `richtig_falsch` | Aussagen einzeln als richtig oder falsch bewerten | 6 |
+| `lueckentext` | Wörter aus einem Kärtchenstapel in die Lücken setzen | 8 |
+| `wortgitter` | Buchstaben in ein Raster, Hinweise zuordnen | 8 |
+| `fehler` | Fehlstellen in einem Text anklicken | 6 |
+| `freitext` | Eine Antwort schreiben, die bewertet wird | 10 |
+
 ## Punkte und Fortschritt
 
 | Leistung | Punkte |
 |---|---|
-| Multiple-Choice-Frage richtig beantwortet | 10 |
-| Tagebuch-Frage abgegeben | 5 |
+| Multiple-Choice-Frage richtig beantwortet | 8 |
+| Begriffe zuordnen | 8 |
+| Richtig/Falsch | 6 |
+| Lückentext | 8 |
+| Wortgitter | 8 |
+| Fehler entdecken | 6 |
+| Freitext-Aufgabe bewertet | 10 |
 | Schloss geöffnet | 10 |
 
-Pro Region sind 25 Punkte möglich. Höchstpunktzahl: 145 (10 Startpunkte + 5 × 25 + 10 Schloss).
-Der Fortschritt zeigt zusätzlich an, wieviele der fünf Regionen aufgedeckt sind und
-wieviele Symbole gefunden sind.
+Pro Station sind 30 bis 40 Punkte möglich. Höchstpunktzahl ≈ 190. Der Fortschritt
+zeigt Stationen, gelöste Aufgaben und Symbole an.
 
-## Ablauf in einer Region
+## Der Ablauf in einer Station
 
-1. Die Gruppe klickt eine Region auf der Weltkarte an. Ist sie verschlossen, erscheint
-   ein Eingabefeld für den Aufdruck.
-2. Zwei Multiple-Choice-Fragen, jede mit vier Antwortmöglichkeiten — genau eine ist richtig.
-3. Eine richtige Antwort bringt 10 Punkte und wird mit einer Erklärung bestätigt.
-4. Sind beide Fragen richtig, wird die Region farbig aufgedeckt. Jetzt bekommt die Gruppe
-   das Symbol der Station und den Aufdruck der nächsten Station.
-5. Danach gibt es eine offene Tagebuch-Frage mit Freitext-Antwort (5 Punkte).
+1. Die Gruppe klickt eine Station an. Ist sie verschlossen, erscheint ein
+   Eingabefeld für den Aufdruck.
+2. Die fünf Aufgaben erscheinen. Eine gelöste Aufgabe bleibt stehen.
+3. Sind alle fünf gelöst, wird die Station farbig aufgedeckt und die Gruppe
+   bekommt das Symbol und den Aufdruck der nächsten Station.
+4. Die Freitext-Antwort zählt als gelöst, sobald sie abgeschickt ist — ihre
+   Punkte folgen mit der Bewertung.
 
-Das Tagebuch sammelt die Antworten aller Gruppen. Die Fragen sind bewusst offen, keine
-davon hat eine einzige richtige Lösung:
+Das Tagebuch sammelt die Antworten aller Gruppen. Die Fragen sind bewusst offen,
+keine davon hat eine einzige richtige Lösung:
 
 - „Stell dir vor, du könntest an den Rand des Pazifischen Feuerrings reisen: Was würdest du unbedingt einpacken — und warum?"
 - „Wie würdest du das Klima auf Hawaii mit nur drei Worten beschreiben?"
 - „Was würdest du tun, um die Menschen in Goma besser vor dem Vulkan zu schützen?"
 
+## Die Bewertung des Freitextes
+
+Jede Freitext-Aufgabe trägt drei Kriterien, die den Schülern unter der Aufgabe
+stehen. Zwei Wege führen zur Bewertung:
+
+**Weg B — über eine Bewertungsdatei.** Der Knopf „Freitexte zur Bewertung" lädt
+eine JSON-Datei mit allen offenen Antworten herunter (Gruppe, Station, Frage,
+Kriterien, Maximum, Antwort). Diese Datei der Bewertung zuführen und das
+Ergebnis mit „Bewertungen einlesen" zurück ins Spiel laden. Kein Schlüssel auf
+dem Schülerrechner, kein Dienst im Netz.
+
+**Weg A — über einen lokalen Bewertungsdienst.** Eine kleine lokale Anwendung
+bewertet die Antworten direkt. Für den Fall, dass die Schule einen Rechner
+bereitstellt, den alle Gruppen erreichen.
+
 ## Dateien
 
 | Datei | Inhalt |
 |---|---|
-| `index.html` | Oberfläche (Karte inline als SVG, Regionen, Fragen, Tagebuch, Export) |
-| `assets/inhalte.js` | Inhalte: Regionen, Multiple-Choice-Fragen, Tagebuch-Fragen, Spielfiguren, Symbole, Aufdrücke |
-| `assets/logik.js` | Logik: Gruppen, Figuren, Fragen, Punkte, Fortschritt, Codekette, Schloss, Tagebuch, Export |
-| `assets/oberflaeche.js` | Oberfläche: Anmeldung, Karte, Regionsbereich, Schloss, Tagebuch, Auswertung |
+| `index.html` | Oberfläche (Karte inline als SVG, Stationen, Aufgaben, Tagebuch, Export) |
+| `assets/inhalte.js` | Inhalte: Stationen, Aufgaben, Spielfiguren, Symbole, Aufdrücke, Skizzen |
+| `assets/aufgaben.js` | Die Aufgabentypen mit ihren Prüffunktionen |
+| `assets/logik.js` | Logik: Gruppen, Aufgaben, Punkte, Fortschritt, Codekette, Schloss, Freitext, Export |
+| `assets/oberflaeche.js` | Oberfläche: Anmeldung, Karte, Aufgabenrenderer, Schloss, Tagebuch, Auswertung |
 | `assets/style.css` | Basis-Styles |
 | `REGELN.md` | Spielregeln für Lehrkraft und Schüler |
-| `scripts/pruefe_kette.js` | Testlauf der Logik inkl. Codekette und Schloss (`node scripts/pruefe_kette.js`) |
+| `scripts/pruefe_kette.js` | Testlauf für Codekette und Schloss (`node scripts/pruefe_kette.js`) |
+| `scripts/pruefe_aufgaben.js` | Testlauf für die Aufgabentypen und die Freitext-Bewertung |
 | `log.md` | Änderungsjournal |
 
 Die Inhalte liegen in `assets/inhalte.js`, die Weltkarte ist als SVG direkt in `index.html`
