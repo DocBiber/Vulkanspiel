@@ -300,7 +300,8 @@ pruefe('Alte Multiple-Choice-Frage laeuft weiter', alt.ok === true && alt.punkte
   JSON.stringify(alt));
 
 console.log('\n[15] Inhalte');
-pruefe('Inhalte-Version ist 5', V.inhaltVersion === '5.0.0', V.inhaltVersion);
+pruefe('Inhalte-Version wird geliefert', V.inhaltVersion === inhalte.version, V.inhaltVersion);
+pruefe('Inhalte-Version ist 5.1', V.inhaltVersion === '5.1.0', V.inhaltVersion);
 pruefe('Alle Stationen haben Symbole',
   V.REGIONEN.every(r => r.symbol && r.symbol_name));
 pruefe('Station 1 hat fuenf Aufgaben',
