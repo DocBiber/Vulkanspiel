@@ -307,5 +307,8 @@ describe('Endpunkte', function () {
     });
     assert.equal(antwort.headers.get('access-control-allow-origin'), null,
       'ein fremder Ursprung darf nicht erlaubt werden');
+    // Abweisen heisst: keinen Header senden, nicht die Anfrage abstuerzen
+    // lassen. Sonst landet ein Stacktrace im Log der Lehrkraft.
+    assert.equal(antwort.status, 200);
   });
 });

@@ -99,10 +99,14 @@ async function rufeGemini(apiSchluessel, modell, prompt, timeout) {
     const roh = await antwort.text();
 
     if (!antwort.ok) {
-      // Die Antwort des Dienstes wird durchgereicht, ohne den Schluessel.
+      // Kurz und ohne den Schluessel: Der Schueler bekommt nur den Status,
+      // die Einzelheiten landen (gekuerzt) im Log der Lehrkraft.
       // Google schreibt in Fehlerfaellen die Projektnummer, nicht den Schluessel.
-      const kurz = roh.length > 300 ? roh.slice(0, 300) : roh;
-      throw new Fehler('Gemini hat geantwortet mit HTTP ' + antwort.status + '. ' + kurz);
+      console.error(
+        'Gemini: HTTP ' + antwort.status + ' — ' +
+        (roh.length > 200 ? roh.slice(0, 200).replace(/\s+/g, ' ') : roh)
+      );
+      throw new Fehler('Der Bewertungsdienst hat mit HTTP ' + antwort.status + ' geantwortet.');
     }
 
     const daten = JSON.parse(roh);

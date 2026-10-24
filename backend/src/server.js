@@ -57,7 +57,11 @@ app.use(cors({
     if (!origin || origin === 'null' || ERLAUBT.indexOf(origin) !== -1) {
       return callback(null, true);
     }
-    return callback(new Error('Origin nicht erlaubt.'));
+    // Abweisen, ohne einen Fehler zu werfen: Ein fremder Ursprung ist kein
+    // Vorfall, und ein Stacktrace im Log wuerde die Lehrkraft nur verwirren.
+    // Der Browser bekommt dann keinen CORS-Header und kann die Antwort
+    // nicht lesen.
+    return callback(null, false);
   },
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type']
