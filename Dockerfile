@@ -2,7 +2,15 @@
 #
 # Cloud Run erwartet einen Prozess, der auf Port 8080 hoert und auf
 # 0.0.0.0 gebunden ist. Der Schluessel kommt zur Laufzeit als
-# Umgebungsvariable — nicht in dieses Bild.
+# Umgebungsvariable oder Secret — nicht in dieses Bild.
+#
+# Der Build-Kontext ist die Projekt-Wurzel, weil `gcloud run deploy --source .`
+# von dort arbeitet. Deshalb liegt package.json unter backend/ und muss
+# mit angepassten Pfaden kopiert werden.
+#
+# Der Server liest den Spielinhalt aus assets/inhalte.js. Er rechnet den
+# Pfad relativ zu seiner eigenen Stelle: WURZEL = /app. Die Datei muss also
+# als /app/assets/inhalte.js liegen.
 
 FROM node:22-alpine
 
@@ -14,10 +22,12 @@ WORKDIR /app
 
 # Zuerst nur die Paketdateien kopieren, damit der Cache greift, wenn sich
 # nur der Code aendert.
-COPY package.json package-lock.json ./
+COPY backend/package.json backend/package-lock.json ./
 RUN npm ci --omit=dev
 
+# Der Code und der Spielinhalt.
 COPY backend ./backend
+COPY assets ./assets
 
 USER bewertung
 
