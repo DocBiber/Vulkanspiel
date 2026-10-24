@@ -149,7 +149,7 @@ per `fetch()` geladen — dadurch funktioniert das Spiel auch per Doppelklick ü
 - [x] 197 Prüfungen bestanden (110 Kette + 87 Aufgaben)
 - [x] Ende-zu-Ende im Browser: paralleler Start am Hot-Spot, falscher Aufdruck
       abgelehnt, Station gelöst, Aufdruck zum nächsten, keine Konsolenfehler
-- [ ] Weg A: lokaler Bewertungsdienst (benötigt API-Schlüssel und ein laufendes Skript)
+- [x] Weg A gebaut: lokaler Bewertungsdienst, Schlüssel in `local/` (ignoriert)
 - [ ] Die übrigen vier Stationen mit den neuen Aufgabentypen füllen
 - [ ] Balancing mit einer echten Klasse prüfen
 
@@ -159,4 +159,7 @@ Station 2 bis 5 mit den neuen Aufgabentypen füllen. Dazu braucht es vier weiter
 Skizzen: Hot-Spot mit Inselkette, Maar, Decken-Schichten, Risikomodelle. Die
 Gruppen arbeiten parallel, deshalb entfällt der Zeitdruck, der bei einer festen
 Reihenfolge bestanden hätte — jede Gruppe läuft ihre eigene Kette durch.
+
+Für eine echte Stunde: `local/konfiguration.json` anlegen (Vorlage liegt daneben),
+dann `python scripts/bewerten.py` starten. Ohne Schlüssel bleibt Weg B.
 

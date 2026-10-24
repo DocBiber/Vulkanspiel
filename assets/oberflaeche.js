@@ -653,6 +653,125 @@
     box.innerHTML = html;
   }
 
+  // ---------- Weg A: lokaler Bewertungsdienst ----------
+
+  /** Das letzte Ergebnis der Dienstbewertung. Bleibt beim Neuzeichnen stehen. */
+  var dienstLetztesErgebnis = '';
+
+  function dienstAdresse() {
+    var wert = ($('dienstUrl') && $('dienstUrl').value || '').trim();
+    return wert ? wert.replace(/\/+$/, '') : '';
+  }
+
+  /** Prueft, ob der lokale Dienst laeuft und einen Schluessel hat. */
+  function dienstPruefen() {
+    var adresse = dienstAdresse();
+    var status = $('dienstStatus');
+    var ergebnis = $('dienstErgebnis');
+    var knopf = $('dienstBewerten');
+    if (!adresse) {
+      status.textContent = 'Bitte die Adresse des Dienstes eintragen.';
+      return;
+    }
+    status.textContent = 'Pruefe …';
+    if (ergebnis) ergebnis.textContent = '';
+
+    fetch(adresse + '/gesund')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && d.ok) {
+          status.textContent = 'Dienst erreichbar: ' + d.dienst + ' · ' + d.modell;
+          knopf.disabled = false;
+        } else {
+          status.textContent = 'Der Dienst laeuft, aber etwas fehlt: ' +
+            (d && d.fehler ? d.fehler : 'unbekannt');
+          knopf.disabled = true;
+        }
+      })
+      .catch(function () {
+        status.textContent = 'Der Dienst ist nicht erreichbar. Gestartet? ' +
+          '(python scripts/bewerten.py)';
+        knopf.disabled = true;
+      });
+  }
+
+  /** Schickt alle offenen Freitexte an den Dienst und traegt die Punkte ein. */
+  function dienstBewerten() {
+    var adresse = dienstAdresse();
+    var offen = V.freitextOffen();
+    var status = $('dienstStatus');
+    var ergebnis = $('dienstErgebnis');
+    var knopf = $('dienstBewerten');
+
+    if (!adresse) {
+      status.textContent = 'Bitte die Adresse des Dienstes eintragen.';
+      return;
+    }
+    if (!offen.length) {
+      ergebnis.textContent = 'Es gibt keine offenen Freitexte.';
+      return;
+    }
+
+    knopf.disabled = true;
+    status.textContent = 'Bewertet ' + offen.length + ' Antwort(en) …';
+
+    var warteschlange = offen.slice();
+    var bewertungen = [];
+    var fehler = 0;
+
+    function naechste() {
+      var eintrag = warteschlange.shift();
+      if (!eintrag) { fertig(); return; }
+
+      fetch(adresse + '/bewerten', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gruppe: eintrag.gruppe,
+          frage: eintrag.frage,
+          kriterien: eintrag.kriterien,
+          max: eintrag.max,
+          antwort: eintrag.antwort
+        })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d && d.ok) {
+            bewertungen.push({
+              gruppe: eintrag.gruppe,
+              regionId: eintrag.regionId,
+              aufgabeId: eintrag.aufgabeId,
+              punkte: d.punkte,
+              hinweis: d.hinweis
+            });
+          } else {
+            fehler++;
+          }
+          naechste();
+        })
+        .catch(function () { fehler++; naechste(); });
+    }
+
+    function fertig() {
+      var ergebnisObjekt = V.freitextBatch(bewertungen);
+      var text = ergebnisObjekt.eingetragen + ' von ' + offen.length +
+        ' Antwort(en) bewertet.';
+      if (fehler) text += ' ' + fehler + ' konnten nicht bewertet werden.';
+      if (ergebnisObjekt.fehler.length) text += ' ' + ergebnisObjekt.fehler.join(' · ');
+
+      // Vor dem Neuzeichnen merken, sonst geht die Meldung dabei verloren.
+      dienstLetztesErgebnis = text;
+      zeichne();
+
+      var status = $('dienstStatus');
+      if (status) status.textContent = '';
+      var knopf = $('dienstBewerten');
+      if (knopf) knopf.disabled = false;
+    }
+
+    naechste();
+  }
+
   // ---------- Auswertung ----------
 
   function zeichneAuswertung() {
@@ -706,6 +825,22 @@
       '<pre id="csvVorschau" style="display:none"></pre>' +
       '<pre id="lehrkraftVorschau" style="display:none"></pre>' +
       '<p class="hinweis" id="importHinweis"></p>';
+
+    // Weg A: der lokale Bewertungsdienst.
+    html += '<div class="dienstblock">' +
+      '<p><strong>Bewertungsdienst (Weg A)</strong></p>' +
+      '<p class="hinweis">Starte auf diesem Rechner <code>python scripts/bewerten.py</code>. ' +
+      'Der Dienst haelt den API-Schluessel auf diesem Rechner, das Spiel schickt ihm ' +
+      'nur die Antworten.</p>' +
+      '<div class="dienstaktionen">' +
+      '<input id="dienstUrl" class="code-font" value="http://127.0.0.1:8765" ' +
+      'placeholder="http://127.0.0.1:8765">' +
+      '<button type="button" id="dienstPruefen">Verbindung pruefen</button>' +
+      '<button type="button" id="dienstBewerten" disabled>Freitexte bewerten (' + offen + ')</button>' +
+      '<span id="dienstStatus" class="hinweis"></span>' +
+      '</div>' +
+      '<p class="hinweis" id="dienstErgebnis">' + esc(dienstLetztesErgebnis) + '</p>' +
+      '</div>';
     box.innerHTML = html;
 
     $('csvHerunterladen').addEventListener('click', function () { download(V.csvBlob(), 'vulkanspiel_punkte.csv'); });
@@ -746,6 +881,8 @@
       leser.readAsText(datei);
       ev.target.value = '';
     });
+    $('dienstPruefen').addEventListener('click', dienstPruefen);
+    $('dienstBewerten').addEventListener('click', dienstBewerten);
     $('spielZuruecksetzen').addEventListener('click', function () {
       if (window.confirm('Wirklich alle Gruppen, Punkte, Regionen, Symbole und Tagebuch-Eintraege loeschen?')) {
         V.reset();

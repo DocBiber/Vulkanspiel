@@ -309,6 +309,27 @@ pruefe('Zu kurze Antwort abgelehnt',
 pruefe('Tagebuch-Text enthaelt die Antwort', V.exportTagebuch().indexOf('Maske') !== -1);
 pruefe('Tagebuch-Export zeigt die Bewertung', V.exportTagebuch().indexOf('bewertet: 5') !== -1);
 
+console.log('\n[9b] Mehrere Bewertungen auf einmal (Weg A)');
+var batch = V.freitextBatch([
+  { gruppe: 'Alpha', regionId: 'subduktion', aufgabeId: 'sub-5', punkte: 9, hinweis: 'Aus dem Dienst.' }
+]);
+pruefe('Batch traegt die Bewertung ein', batch.ok === true && batch.eingetragen === 1,
+  JSON.stringify(batch));
+pruefe('Punkte jetzt 144', alpha().punkte === 144, String(alpha().punkte));
+var batchZwei = V.freitextBatch([
+  { gruppe: 'Alpha', regionId: 'subduktion', aufgabeId: 'sub-5', punkte: 6, hinweis: 'Nachkorrektur.' }
+]);
+pruefe('Erneute Batch-Bewertung ersetzt die Punkte',
+  V.gruppen().find(function (g) { return g.name === 'Alpha'; }).punkte === 141,
+  String(V.gruppen().find(function (g) { return g.name === 'Alpha'; }).punkte));
+var batchFalsch = V.freitextBatch([
+  { gruppe: 'Gibt es nicht', regionId: 'subduktion', aufgabeId: 'sub-5', punkte: 5 }
+]);
+pruefe('Unbekannte Gruppe wird gemeldet',
+  batchFalsch.eingetragen === 0 && batchFalsch.fehler.length === 1, JSON.stringify(batchFalsch));
+var batchLeer = V.freitextBatch([]);
+pruefe('Leere Liste ist harmlos', batchLeer.ok === true && batchLeer.eingetragen === 0);
+
 console.log('\n[10] Dateien und Verdrahtung');
 pruefe('index.html laedt inhalte.js', html.indexOf('src="assets/inhalte.js"') !== -1);
 pruefe('index.html laedt aufgaben.js', html.indexOf('src="assets/aufgaben.js"') !== -1);
@@ -316,7 +337,13 @@ pruefe('index.html laedt logik.js', html.indexOf('src="assets/logik.js"') !== -1
 pruefe('index.html laedt oberflaeche.js', html.indexOf('src="assets/oberflaeche.js"') !== -1);
 pruefe('Alte Skripte werden nicht mehr geladen',
       html.indexOf('src="assets/spiel.js"') === -1 && html.indexOf('src="assets/ui.js"') === -1);
-pruefe('Kein fetch() im Spiel', html.indexOf('fetch(') === -1);
+pruefe('index.html laedt keine Daten per fetch', html.indexOf('fetch(') === -1);
+pruefe('Nur der lokale Bewertungsdienst wird angerufen',
+      oberflaeche.indexOf('/bewerten') !== -1 &&
+      oberflaeche.indexOf('/gesund') !== -1);
+pruefe('Der Schluessel kommt nicht ins Spiel',
+      oberflaeche.indexOf('apiSchluessel') === -1 &&
+      oberflaeche.indexOf('AIza') === -1);
 pruefe('Startcode-Eingabe vorhanden', html.indexOf('id="startcode"') !== -1);
 pruefe('Schloss-Bereich vorhanden', html.indexOf('id="schlossBox"') !== -1);
 pruefe('Aufgaben-Styles vorhanden', html.indexOf('.kaertchen-item') !== -1);

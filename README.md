@@ -107,9 +107,11 @@ Kriterien, Maximum, Antwort). Diese Datei der Bewertung zuführen und das
 Ergebnis mit „Bewertungen einlesen" zurück ins Spiel laden. Kein Schlüssel auf
 dem Schülerrechner, kein Dienst im Netz.
 
-**Weg A — über einen lokalen Bewertungsdienst.** Eine kleine lokale Anwendung
-bewertet die Antworten direkt. Für den Fall, dass die Schule einen Rechner
-bereitstellt, den alle Gruppen erreichen.
+**Weg A — über einen lokalen Bewertungsdienst.** Der Dienst läuft auf deinem
+Rechner (`python scripts/bewerten.py`) und hält den API-Schlüssel in
+`local/konfiguration.json` — eine Datei, die von Git ignoriert wird. Im Spiel
+unter „Auswertung" prüfst du die Verbindung und schickst die offenen Freitexte
+ab. Schlüssel: Google AI Studio, kostenlos, ohne Kreditkarte.
 
 ## Dateien
 
@@ -124,6 +126,8 @@ bereitstellt, den alle Gruppen erreichen.
 | `REGELN.md` | Spielregeln für Lehrkraft und Schüler |
 | `scripts/pruefe_kette.js` | Testlauf für Codekette und Schloss (`node scripts/pruefe_kette.js`) |
 | `scripts/pruefe_aufgaben.js` | Testlauf für die Aufgabentypen und die Freitext-Bewertung |
+| `scripts/bewerten.py` | Lokaler Bewertungsdienst (Weg A), `python scripts/bewerten.py` |
+| `local/konfiguration.example.json` | Vorlage für den API-Schlüssel. Die echte Datei `local/konfiguration.json` wird von Git ignoriert |
 | `log.md` | Änderungsjournal |
 
 Die Inhalte liegen in `assets/inhalte.js`, die Weltkarte ist als SVG direkt in `index.html`

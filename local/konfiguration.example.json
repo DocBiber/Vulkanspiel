@@ -1,0 +1,18 @@
+{
+  "_erklaerung": "Vorlage fuer local/konfiguration.json. Kopiere diese Datei nach local/konfiguration.json und traege deinen API-Schluessel ein. local/ wird von Git ignoriert.",
+
+  "dienst": "google",
+  "_dienst_erklaerung": "google (Gemini) oder groq. Den Schluessel unten beim jeweiligen Anbieter holen.",
+
+  "apiSchluessel": "HIER-DEIN-SCHLUESSEL-EINTRAGEN",
+  "_apiSchluessel_erklaerung": "Der Schluessel aus Google AI Studio (aistudio.google.com) oder von der Groq-Konsole. Gehoert nur in local/konfiguration.json, nie ins Repository.",
+
+  "modell": "gemini-2.5-flash",
+  "_modell_erklaerung": "google: gemini-2.5-flash oder gemini-2.0-flash. groq: llama-3.3-70b-versatile.",
+
+  "port": 8765,
+  "_port_erklaerung": "Der lokale Dienst lauscht auf http://127.0.0.1:PORT. 8765 ist frei; aendere ihn nur, wenn der Port belegt ist.",
+
+  "maxZeitSekunden": 60,
+  "_maxZeit_erklaerung": "Wie lange der Dienst pro Anfrage hoechstens auf den Dienst warten darf."
+}

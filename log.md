@@ -491,3 +491,73 @@ Offen:
 - Weg A (lokaler Bewertungsdienst) ist geplant, aber noch nicht gebaut.
 - Station 2 bis 5 tragen noch die alten zwei Fragen und eine Tagebuch-Frage.
 
+## [2026-10-24] update | Weg A: lokaler Bewertungsdienst
+
+Auslöser: Es gab einen Google-Studio-Schlüssel. Er soll sicher liegen und der
+Freitext soll in der Stunde bewertet werden können, ohne dass der Schlüssel auf
+dem Schülerrechner landet.
+
+Entschieden: Der Schlüssel liegt in `local/konfiguration.json`, ein Ordner, den
+Git ignoriert. Ein kleiner lokaler Dienst auf dem Rechner der Lehrkraft hält den
+Schlüssel und nimmt die Antworten entgegen. Das Spiel schickt ihm nur die
+Antworten.
+
+Dabei ist mir eine Datei im Projekt aufgefallen, die ich nicht angelegt habe:
+`anleitung-gemini-spiel.md`. Sie beschreibt eine andere Architektur — ein
+Node.js/Express-Backend auf Google Cloud Run. Die ist nicht gebaut und steht
+noch zur Entscheidung.
+
+Umgesetzt:
+
+- **`local/` als sicherer Ort:** `local/konfiguration.json` liegt in der
+  Ignorier-Liste, `local/konfiguration.example.json` steht im Repository als
+  Vorlage. Geprüft mit `git check-ignore`, dass die echte Datei ignoriert wird
+  und die Vorlage nicht.
+- **`scripts/bewerten.py`:** Der lokale Dienst. Liest die Konfiguration, prüft
+  den Schlüssel, weigert sich mit einer klaren Anleitung zu starten, wenn keiner
+  eingetragen ist. Hört auf `127.0.0.1:8765`, spricht Google Gemini und Groq an,
+  sendet CORS-Header (das Spiel läuft oft über `file://`), liefert JSON mit
+  Punkten und Begründung. Fehler des Dienstes werden als Meldung
+  durchgereicht, nicht als Absturz.
+- **Bewertungstext:** Der Dienst bekommt Frage, Kriterien, Maximum und Antwort
+  und liefert ausschließlich JSON. Die Antwort wird robust gelesen — auch wenn
+  der Dienst einen Satz davor oder eine ungültige Zahl schreibt.
+- **Spiel-Seite:** Neuer Abschnitt „Bewertungsdienst (Weg A)" unter Auswertung
+  mit Adressfeld, „Verbindung prüfen" und „Freitexte bewerten". Die Meldung
+  überlebt das Neuzeichnen, weil sie in einem Zustand steht.
+- **`freitextBatch` in der Logik:** Trägt mehrere Bewertungen auf einmal ein,
+  wie der Dienst sie liefert. Eine erneute Bewertung ersetzt die Punkte.
+
+Geprüft:
+
+- `python scripts/bewerten.py` ohne Schlüssel → weigert sich mit Anleitung,
+  Rückgabe 1. Mit Platzhalter → ebenfalls, mit Hinweis auf den Platzhalter.
+- Mit eingetragenem Platzhalter-Schlüssel: `GET /gesund` antwortet
+  `{"ok": true, ...}`, `POST /bewerten` erreicht Google, und Google lehnt den
+  Schlüssel mit einer klaren Meldung ab. Die Fehlerbehandlung greift.
+- Ende-zu-Ende im Browser über `file://`: Verbindung geprüft
+  („Dienst erreichbar: google · gemini-2.5-flash"), Bewertung gestartet,
+  Ergebnis „0 von 1 Antwort(en) bewertet. 1 konnten nicht bewertet werden."
+  — korrekt für einen ungültigen Schlüssel, und die Meldung blieb stehen.
+- `git check-ignore -v` bestätigt, dass `local/konfiguration.json` ignoriert
+  wird und `local/konfiguration.example.json` nicht.
+- 205 Prüfungen bestanden (117 Kette + 88 Aufgaben). Neu dazu: der Schlüssel
+  kommt nicht ins Spiel, es wird nur der lokale Dienst angerufen,
+  `freitextBatch` trägt und ersetzt.
+
+Behoben unterwegs:
+
+- Die Ergebnismeldung der Dienstbewertung verschwand, weil `zeichne()` den
+  Auswertungsbereich neu aufbaut. Sie steht jetzt in einem Zustand und wird
+  beim Neuzeichnen mit ausgegeben.
+- Die Ignorier-Regel `local/` griff auch die Vorlage mit. Jetzt
+  `local/*` plus Ausnahme für `konfiguration.example.json`.
+
+Offen:
+
+- `anleitung-gemini-spiel.md` beschreibt eine andere Architektur (Backend auf
+  Cloud Run). Nicht gebaut, nicht committet — Entscheidung steht aus.
+- Der echte Schlüssel muss von Hand in `local/konfiguration.json` eingetragen
+  werden. Der Dienst läuft erst dann.
+- Station 2 bis 5 tragen noch die alten zwei Fragen und eine Tagebuch-Frage.
+

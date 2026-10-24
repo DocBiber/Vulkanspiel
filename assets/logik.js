@@ -652,6 +652,53 @@
     return out;
   }
 
+  /**
+   * Mehrere Bewertungen auf einmal eintragen. Jeder Eintrag:
+   *   { gruppe, regionId, aufgabeId, punkte, hinweis }
+   *
+   * Wird vom lokalen Bewertungsdienst (Weg A) genutzt, der alle Antworten
+   * auf einmal zurueckliefert.
+   */
+  function freitextBatch(liste) {
+    var eingetragen = 0;
+    var fehler = [];
+
+    (liste || []).forEach(function (z) {
+      var g = gruppe(z.gruppe);
+      if (!g) { fehler.push('Unbekannte Gruppe: ' + z.gruppe); return; }
+      if (!region(z.regionId)) { fehler.push('Unbekannte Station: ' + z.regionId); return; }
+      var a = aufgabe(z.regionId, z.aufgabeId);
+      if (!a || !istFreitext(a)) {
+        fehler.push('Keine Freitext-Aufgabe: ' + z.aufgabeId + ' in ' + z.regionId);
+        return;
+      }
+
+      var f = g.regionen[z.regionId];
+      var e = f.aufgaben[z.aufgabeId];
+      if (!e || !e.angabe) { fehler.push('Keine Antwort vorliegend: ' + z.aufgabeId); return; }
+
+      var max = a.punkte || PUNKTE.TAGEBUCH_ABGABE;
+      var neu = Number(z.punkte);
+      if (!isFinite(neu) || neu < 0) neu = 0;
+      if (neu > max) neu = max;
+
+      // Differenz verbuchen, damit eine erneute Bewertung nicht doppelt zaehlt.
+      g.punkte = g.punkte - (e.punkte || 0) + neu;
+      f.aufgaben[z.aufgabeId] = {
+        angabe: e.angabe,
+        geloest: true,
+        bewertet: true,
+        punkte: neu,
+        hinweis: z.hinweis || '',
+        bewertetAm: new Date().toISOString()
+      };
+      eingetragen++;
+    });
+
+    speichere(zustand);
+    return { ok: true, eingetragen: eingetragen, fehler: fehler };
+  }
+
   /** Die noch nicht bewerteten Freitexte — der Eingang fuer Weg B. */
   function freitextOffen() {
     return freitextEintraege().filter(function (e) { return !e.bewertet; });
@@ -865,6 +912,7 @@
     naechsteRegionVon: naechsteRegionVon,
     freitextSpeichern: freitextSpeichern,
     freitextBewerten: freitextBewerten,
+    freitextBatch: freitextBatch,
     freitextImport: freitextImport,
     freitextEintraege: freitextEintraege,
     freitextOffen: freitextOffen,

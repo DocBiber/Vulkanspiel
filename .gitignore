@@ -18,4 +18,11 @@ $RECYCLE.BIN/
 # Downloads und temporäre Dateien
 *.download
 *.tmp
+
+# Lokale Konfiguration — DARF NICHT INS REPOSITORY
+# Hier liegt der API-Schluessel fuer die Freitext-Bewertung (Weg A).
+#   local/konfiguration.json         deine echte Konfiguration (ignoriert)
+#   local/konfiguration.example.json Vorlage (steht im Repository)
+local/*
+!local/konfiguration.example.json
 ~$*
