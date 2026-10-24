@@ -1,0 +1,10 @@
+# Diese Dinge kommen nicht ins Bild.
+backend/node_modules
+backend/.env
+backend/.env.*
+!backend/.env.example
+backend/test
+.git
+.github
+local
+*.md

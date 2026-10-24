@@ -1,0 +1,8 @@
+# Abhaengigkeiten und lokale Geheimnisse gehoeren nicht ins Repository.
+node_modules/
+.env
+.env.*
+!.env.example
+npm-debug.log*
+coverage/
+*.local

@@ -108,25 +108,32 @@ Ergebnis als JSON-Datei zurück ins Spiel laden — der Knopf „Bewertungen
 einlesen" nimmt sie entgegen. So fällt kein Schlüssel auf dem Schülerrechner
 und es läuft kein Dienst.
 
-**Weg A — über einen lokalen Bewertungsdienst.** Der Dienst läuft auf deinem
-Rechner und hält den API-Schlüssel. Er wird gestartet mit:
+**Weg A — über das Bewertungs-Backend.** Das Backend läuft auf deinem Rechner
+und hält den API-Schlüssel. Es wird gestartet mit:
 
-    python scripts/bewerten.py
+    cd backend
+    npm install
+    npm start
 
-Damit der Dienst etwas bewerten kann, braucht er den Schlüssel. Der liegt in
-`local/konfiguration.json` — diese Datei wird von Git ignoriert und kommt nie
-ins Repository. Als Vorlage dient `local/konfiguration.example.json`.
+Damit das Backend etwas bewerten kann, braucht es den Schlüssel. Der liegt in
+`backend/.env` — diese Datei wird von Git ignoriert und kommt nie ins
+Repository. Als Vorlage dient `backend/.env.example`.
+
+Das Backend liest die Bewertungskriterien aus `assets/inhalte.js`, derselben
+Quelle wie das Spiel. Ein Schüler kann die Rubrik also nicht ändern.
 
 Der Schlüssel kommt aus Google AI Studio (aistudio.google.com), kostenlos und
 ohne Kreditkarte. Gib ihn niemals in einen Chat und committe ihn nicht.
 
 Im Spiel steht unter „Auswertung" der Abschnitt „Bewertungsdienst (Weg A)".
 Dort prüfst du die Verbindung und schickst dann alle offenen Freitexte ab. Das
-Spiel schickt dem Dienst nur die Antworten, niemals den Schlüssel.
+Spiel schickt dem Backend nur die Antworten, niemals den Schlüssel.
 
-Der Dienst braucht eine Internetverbindung, nur auf deinem Rechner. Die
-Schülerrechner brauchen ihn nicht zu erreichen, solange sie ihn nicht selbst
-bewerten wollen.
+Das Backend braucht eine Internetverbindung, nur auf deinem Rechner. Die
+Schülerrechner brauchen es nicht zu erreichen.
+
+`../scripts/bewerten.py` ist ein kleiner Ersatz in Python für den Fall, dass
+Node nicht zur Hand ist. Beide Wege erledigen dasselbe.
 
 Ohne Bewertung gilt eine Freitext-Antwort als abgegeben. Die Station kann also
 auch ohne Bewertung aufgedeckt werden; es fehlen dann nur die Punkte.

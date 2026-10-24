@@ -338,12 +338,14 @@ pruefe('index.html laedt oberflaeche.js', html.indexOf('src="assets/oberflaeche.
 pruefe('Alte Skripte werden nicht mehr geladen',
       html.indexOf('src="assets/spiel.js"') === -1 && html.indexOf('src="assets/ui.js"') === -1);
 pruefe('index.html laedt keine Daten per fetch', html.indexOf('fetch(') === -1);
-pruefe('Nur der lokale Bewertungsdienst wird angerufen',
-      oberflaeche.indexOf('/bewerten') !== -1 &&
-      oberflaeche.indexOf('/gesund') !== -1);
+pruefe('Nur das Bewertungs-Backend wird angerufen',
+      oberflaeche.indexOf('/api/evaluate') !== -1 &&
+      oberflaeche.indexOf('/health') !== -1);
 pruefe('Der Schluessel kommt nicht ins Spiel',
       oberflaeche.indexOf('apiSchluessel') === -1 &&
       oberflaeche.indexOf('AIza') === -1);
+pruefe('Der Schluessel-Ort wird im Spiel genannt',
+      oberflaeche.indexOf('backend/.env') !== -1);
 pruefe('Startcode-Eingabe vorhanden', html.indexOf('id="startcode"') !== -1);
 pruefe('Schloss-Bereich vorhanden', html.indexOf('id="schlossBox"') !== -1);
 pruefe('Aufgaben-Styles vorhanden', html.indexOf('.kaertchen-item') !== -1);

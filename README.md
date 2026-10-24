@@ -107,11 +107,15 @@ Kriterien, Maximum, Antwort). Diese Datei der Bewertung zuführen und das
 Ergebnis mit „Bewertungen einlesen" zurück ins Spiel laden. Kein Schlüssel auf
 dem Schülerrechner, kein Dienst im Netz.
 
-**Weg A — über einen lokalen Bewertungsdienst.** Der Dienst läuft auf deinem
-Rechner (`python scripts/bewerten.py`) und hält den API-Schlüssel in
-`local/konfiguration.json` — eine Datei, die von Git ignoriert wird. Im Spiel
-unter „Auswertung" prüfst du die Verbindung und schickst die offenen Freitexte
-ab. Schlüssel: Google AI Studio, kostenlos, ohne Kreditkarte.
+**Weg A — über das Bewertungs-Backend.** Das Backend läuft auf deinem Rechner
+(`cd backend && npm install && npm start`) und hält den API-Schlüssel in
+`backend/.env` — eine Datei, die von Git ignoriert wird. Es liest die
+Bewertungskriterien aus dem Spielinhalt, sodass ein Schüler die Rubrik nicht
+ändern kann. Im Spiel unter „Auswertung" prüfst du die Verbindung und schickst
+die offenen Freitexte ab. Schlüssel: Google AI Studio, kostenlos, ohne
+Kreditkarte.
+
+Wer Node nicht hat: `scripts/bewerten.py` macht dasselbe in Python.
 
 ## Dateien
 
@@ -126,8 +130,12 @@ ab. Schlüssel: Google AI Studio, kostenlos, ohne Kreditkarte.
 | `REGELN.md` | Spielregeln für Lehrkraft und Schüler |
 | `scripts/pruefe_kette.js` | Testlauf für Codekette und Schloss (`node scripts/pruefe_kette.js`) |
 | `scripts/pruefe_aufgaben.js` | Testlauf für die Aufgabentypen und die Freitext-Bewertung |
-| `scripts/bewerten.py` | Lokaler Bewertungsdienst (Weg A), `python scripts/bewerten.py` |
-| `local/konfiguration.example.json` | Vorlage für den API-Schlüssel. Die echte Datei `local/konfiguration.json` wird von Git ignoriert |
+| `scripts/bewerten.py` | Kleiner Ersatz-Dienst in Python (Weg A ohne Node) |
+| `backend/` | Bewertungs-Backend in Node.js — hält den API-Schlüssel und ruft Gemini auf |
+| `backend/.env.example` | Vorlage für den API-Schlüssel. `backend/.env` wird von Git ignoriert |
+| `local/konfiguration.example.json` | Vorlage für den Python-Dienst |
+| `Dockerfile` | Container-Image des Backends für Cloud Run |
+| `.github/workflows/backend-ci.yml` | Prüft das Backend bei jedem Push und jeder Anfrage |
 | `log.md` | Änderungsjournal |
 
 Die Inhalte liegen in `assets/inhalte.js`, die Weltkarte ist als SVG direkt in `index.html`

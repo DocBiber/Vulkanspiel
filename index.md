@@ -149,7 +149,12 @@ per `fetch()` geladen — dadurch funktioniert das Spiel auch per Doppelklick ü
 - [x] 197 Prüfungen bestanden (110 Kette + 87 Aufgaben)
 - [x] Ende-zu-Ende im Browser: paralleler Start am Hot-Spot, falscher Aufdruck
       abgelehnt, Station gelöst, Aufdruck zum nächsten, keine Konsolenfehler
-- [x] Weg A gebaut: lokaler Bewertungsdienst, Schlüssel in `local/` (ignoriert)
+- [x] Weg A gebaut: Bewertungs-Backend in Node.js, Schlüssel in `backend/.env` (ignoriert)
+- [x] Das Backend liest die Kriterien aus dem Spielinhalt — die Rubrik kommt nie vom Schülerrechner
+- [x] 30 Prüfungen im Backend, 205 im Spiel
+- [x] GitHub Actions prüft das Backend bei jedem Push
+- [x] Ende-zu-Ende im Browser: Verbindung geprüft, Bewertung angelaufen, Fehlermeldung von Gemini durchgereicht
+- [ ] Deployment auf Cloud Run (braucht `gcloud` und ein Projekt mit Abrechnung — nicht installiert)
 - [ ] Die übrigen vier Stationen mit den neuen Aufgabentypen füllen
 - [ ] Balancing mit einer echten Klasse prüfen
 
@@ -160,6 +165,6 @@ Skizzen: Hot-Spot mit Inselkette, Maar, Decken-Schichten, Risikomodelle. Die
 Gruppen arbeiten parallel, deshalb entfällt der Zeitdruck, der bei einer festen
 Reihenfolge bestanden hätte — jede Gruppe läuft ihre eigene Kette durch.
 
-Für eine echte Stunde: `local/konfiguration.json` anlegen (Vorlage liegt daneben),
-dann `python scripts/bewerten.py` starten. Ohne Schlüssel bleibt Weg B.
+Für eine echte Stunde: `backend/.env` anlegen (Vorlage liegt daneben), dann
+`cd backend && npm install && npm start`. Ohne Schlüssel bleibt Weg B.
 

@@ -676,21 +676,21 @@
     status.textContent = 'Pruefe …';
     if (ergebnis) ergebnis.textContent = '';
 
-    fetch(adresse + '/gesund')
+    fetch(adresse + '/health')
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (d && d.ok) {
-          status.textContent = 'Dienst erreichbar: ' + d.dienst + ' · ' + d.modell;
+          status.textContent = 'Dienst erreichbar: ' + d.modell +
+            (d.schluesselVorhanden ? ' · Schluessel eingetragen' : ' · KEIN Schluessel eingetragen');
           knopf.disabled = false;
         } else {
-          status.textContent = 'Der Dienst laeuft, aber etwas fehlt: ' +
-            (d && d.fehler ? d.fehler : 'unbekannt');
+          status.textContent = 'Der Dienst antwortet nicht wie erwartet.';
           knopf.disabled = true;
         }
       })
       .catch(function () {
         status.textContent = 'Der Dienst ist nicht erreichbar. Gestartet? ' +
-          '(python scripts/bewerten.py)';
+          '(npm start im Ordner backend)';
         knopf.disabled = true;
       });
   }
@@ -718,19 +718,19 @@
     var warteschlange = offen.slice();
     var bewertungen = [];
     var fehler = 0;
+    var fehlermeldungen = [];
 
     function naechste() {
       var eintrag = warteschlange.shift();
       if (!eintrag) { fertig(); return; }
 
-      fetch(adresse + '/bewerten', {
+      fetch(adresse + '/api/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           gruppe: eintrag.gruppe,
-          frage: eintrag.frage,
-          kriterien: eintrag.kriterien,
-          max: eintrag.max,
+          regionId: eintrag.regionId,
+          aufgabeId: eintrag.aufgabeId,
           antwort: eintrag.antwort
         })
       })
@@ -746,6 +746,7 @@
             });
           } else {
             fehler++;
+            fehlermeldungen.push(eintrag.gruppe + ': ' + (d && d.fehler ? d.fehler : 'unbekannt'));
           }
           naechste();
         })
@@ -758,6 +759,9 @@
         ' Antwort(en) bewertet.';
       if (fehler) text += ' ' + fehler + ' konnten nicht bewertet werden.';
       if (ergebnisObjekt.fehler.length) text += ' ' + ergebnisObjekt.fehler.join(' · ');
+      if (fehlermeldungen.length) {
+        text += ' Grund: ' + fehlermeldungen[0].slice(0, 160);
+      }
 
       // Vor dem Neuzeichnen merken, sonst geht die Meldung dabei verloren.
       dienstLetztesErgebnis = text;
@@ -826,15 +830,16 @@
       '<pre id="lehrkraftVorschau" style="display:none"></pre>' +
       '<p class="hinweis" id="importHinweis"></p>';
 
-    // Weg A: der lokale Bewertungsdienst.
+    // Weg A: das Bewertungs-Backend.
     html += '<div class="dienstblock">' +
       '<p><strong>Bewertungsdienst (Weg A)</strong></p>' +
-      '<p class="hinweis">Starte auf diesem Rechner <code>python scripts/bewerten.py</code>. ' +
-      'Der Dienst haelt den API-Schluessel auf diesem Rechner, das Spiel schickt ihm ' +
-      'nur die Antworten.</p>' +
+      '<p class="hinweis">Starte auf diesem Rechner <code>npm install</code> und ' +
+      '<code>npm start</code> im Ordner <code>backend</code>. Der Dienst haelt den ' +
+      'API-Schluessel in <code>backend/.env</code> und liest die Bewertungskriterien ' +
+      'aus dem Spielinhalt — die kommen nie vom Schülerrechner.</p>' +
       '<div class="dienstaktionen">' +
-      '<input id="dienstUrl" class="code-font" value="http://127.0.0.1:8765" ' +
-      'placeholder="http://127.0.0.1:8765">' +
+      '<input id="dienstUrl" class="code-font" value="http://127.0.0.1:8080" ' +
+      'placeholder="http://127.0.0.1:8080">' +
       '<button type="button" id="dienstPruefen">Verbindung pruefen</button>' +
       '<button type="button" id="dienstBewerten" disabled>Freitexte bewerten (' + offen + ')</button>' +
       '<span id="dienstStatus" class="hinweis"></span>' +

@@ -1,0 +1,53 @@
+# Backend CI
+#
+# Prueft das Bewertungs-Backend bei jedem Push und jeder Anfrage.
+# Der Workflow braucht keinen API-Schluessel: Die Pruefungen rufen die
+# Gemini API nicht auf.
+
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Abhaengigkeiten installieren
+        run: npm ci
+
+      - name: Syntax pruefen
+        run: node --check src/server.js
+
+      - name: Pruefungen ausfuehren
+        run: npm test
+
+      - name: Sicherstellen, dass kein Schluessel im Repository liegt
+        run: |
+          if git ls-files | grep -E '(^|/)\.env$|konfiguration\.json$'; then
+            echo "ACHTUNG: Eine Datei mit einem Schluessel ist im Repository."
+            exit 1
+          fi

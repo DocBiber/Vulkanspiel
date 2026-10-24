@@ -561,3 +561,87 @@ Offen:
   werden. Der Dienst läuft erst dann.
 - Station 2 bis 5 tragen noch die alten zwei Fragen und eine Tagebuch-Frage.
 
+## [2026-10-24] update | Bewertungs-Backend in Node.js
+
+Auslöser: Eine hinterlegte Anleitung beschreibt, Gemini über ein
+Node.js/Express-Backend auf Google Cloud Run anzusprechen. Geprüft wurde, ob
+das so machbar ist, und dann umgesetzt.
+
+Geprüft:
+
+- Node 26 und npm 11 sind vorhanden, die Paketquelle ist erreichbar.
+- Gemini antwortet auf einen ungültigen Schlüssel mit einer klaren Meldung —
+  die Strecke ist frei.
+- `gcloud` und `docker` sind NICHT installiert. Cloud Run lässt sich deshalb
+  nicht deployen. Die Dateien dafür sind geschrieben, aber ungetestet.
+- Die Anleitung geht von einem Vite-Frontend aus (`import.meta.env`,
+  `VITE_GAME_API_URL`). Das Projekt hat keinen Build-Schritt — index.html ist
+  eine einzige statische Datei. VITE-Variablen gibt es hier nicht.
+- Das Beispiel in der Anleitung ist ein Platzhalter (eine feste Frage
+  „dragon"). Das echte Spiel hat fünf Stationen mit je fünf Aufgaben, und die
+  Kriterien liegen in `assets/inhalte.js`. Das Backend muss diese lesen.
+
+Entschieden: Das Backend so bauen, dass es mit dem echten Spielinhalt
+arbeitet. Cloud Run-Dateien schreiben, aber als nicht getestet kennzeichnen.
+Der Python-Dienst bleibt als Ersatz für den Fall, dass Node fehlt.
+
+Umgesetzt:
+
+- **`backend/`**: Express-Dienst mit helmet, cors, express-rate-limit,
+  dotenv. Hält den Schüssel in `backend/.env`, liest die Kriterien aus
+  `assets/inhalte.js` in einer Sandbox (die Datei ist JavaScript, kein JSON —
+  das SVG der Skizzen wird mit „+" zusammengesetzt). Bewertet nur Freitexte.
+- **Schnittstellen**: `GET /health`, `GET /api/aufgaben`, `POST /api/evaluate`
+  mit Gruppe, Station, Aufgabe, Antwort. Die Kriterien kommen aus dem
+  Spielinhalt, nicht aus der Anfrage — ein Schüler kann die Rubrik nicht
+  ändern.
+- **Sicherheit**: Spielereingabe in eigenen Tags gekennzeichnet und als nicht
+  vertrauenswürdig deklariert, mit der Aufforderung, Anweisungen darin zu
+  ignorieren. Strukturierte JSON-Ausgabe über `responseJsonSchema`. Punkte
+  auf das Maximum begrenzt, Hinweis auf 500 Zeichen gekürzt. Eingaben geprüft,
+  bevor Gemini aufgerufen wird. Kein Schüssel in Antworten oder Logs.
+- **`backend/test/server.test.js`**: 30 Prüfungen mit dem eingebauten
+  Testlauf. Geprüft werden der Spielinhalt, das Einlesen der Bewertung, der
+  Prompt und die Schranken des Endpunkts. Gemini wird nicht aufgerufen.
+- **`.github/workflows/backend-ci.yml`**: Installiert, prüft die Syntax,
+  führt die Prüfungen aus und stellt sicher, dass keine Schlüsseldatei im
+  Repository liegt.
+- **`Dockerfile` und `.dockerignore`**: Container-Image für Cloud Run. Der
+  Schlüssel kommt zur Laufzeit als Umgebungsvariable.
+- **Spiel**: Der Abschnitt „Bewertungsdienst (Weg A)" spricht jetzt
+  `/health` und `/api/evaluate` an. Fehlermeldungen des Dienstes werden
+  durchgereicht.
+
+Geprüft:
+
+- `npm install` läuft durch, 73 Pakete, 0 Schwachstellen.
+- `npm test` → 30 bestanden, 0 fehlgeschlagen.
+- Der Dienst startet nicht ohne Schüssel und erklärt, was zu tun ist.
+- Mit Schüssel: `/health` antwortet, `/api/aufgaben` liefert die echten
+  Kriterien aus dem Spielinhalt, `POST /api/evaluate` erreicht Gemini. Mit
+  einem ungültigen Schüssel kommt Googles Meldung sauber durch.
+- Ende-zu-Ende im Browser über `file://`: „Dienst erreichbar: gemini-2.5-flash ·
+  Schluessel eingetragen", Bewertung angelaufen, Fehlermeldung durchgereicht.
+- Die Spielprüfungen laufen weiter: 205 bestanden.
+
+Behoben unterwegs:
+
+- `node --test test/` versteht in dieser Version keinen Verzeichnisnamen.
+  Jetzt `node --test test/*.test.js`.
+- Der Inhaltslader las die Datei als JSON. Sie ist aber JavaScript — das SVG
+  der Skizzen wird mit „+" zusammengesetzt. Jetzt wird sie in einer Sandbox
+  ausgeführt, wie im Browser.
+- Das Backend lehnte Anfragen einer `file://`-Seite ab, weil diese den
+  Ursprung „null" sendet. Der Null-Ursprung ist jetzt erlaubt.
+- Die Ergebnismeldung verschwand durch ein Neuzeichnen. Sie steht jetzt in
+  einem Zustand.
+
+Offen:
+
+- Deployment auf Cloud Run ist nicht getestet — dafür fehlen `gcloud` und
+  `docker`, und es braucht ein Projekt mit aktivierter Abrechnung.
+- Der echte Schüssel muss von Hand in `backend/.env` eingetragen werden.
+- `anleitung-gemini-spiel.md` beschreibt weiterhin die Cloud-Run-Variante. Sie
+  liegt untracked im Projekt und wartet auf eine Entscheidung.
+- Station 2 bis 5 tragen noch die alten zwei Fragen und eine Tagebuch-Frage.
+
