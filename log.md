@@ -645,3 +645,24 @@ Offen:
   liegt untracked im Projekt und wartet auf eine Entscheidung.
 - Station 2 bis 5 tragen noch die alten zwei Fragen und eine Tagebuch-Frage.
 
+## [2026-10-30] update | Stationen 2 bis 5 ausgebaut
+
+- **Stationen 2 bis 5** (HOT, MAAR, LIP, RISIKO) haben jetzt wie Station 1 fünf
+  Aufgaben: Multiple Choice, Zuordnung, Richtig/Falsch, Lückentext, Freitext
+  (8 + 8 + 6 + 8 + 10 = 40 Punkte). Die alten MC-Fragen sind übernommen, die
+  Tagebuch-Frage steht als `tagebuch_alt`.
+- **Neue Skizzen** in `assets/inhalte.js`: `schildvulkan`, `maar`, `trapp`,
+  `risikoformel`. Zwei neue CSS-Klassen in `index.html` (`skizze-wasser`,
+  `skizze-feld`).
+- **Tests angepasst**: `pruefe_kette.js` und `pruefe_aufgaben.js` rechnen mit
+  25 Aufgaben (160 Punkte nach allen Aufgaben ohne Freitext). 118 und 89
+  bestanden. Backend: 30 bestanden.
+- **README**: Punktzahl pro Station 40, Höchstpunktzahl 220.
+- **Modell** in `backend/.env.example` auf `gemini-2.5-flash` gesetzt, wie
+  Standard im Code.
+- **Klarstellung**: `anleitung-gemini-spiel.md` ist im Repository versioniert
+  und passt zum Code (Cloud-Run-Variante); keine Änderung nötig.
+- Weiterhin offen: Cloud-Run-Deployment ungetestet, Schlüssel von Hand in
+  `backend/.env`. `pruefe_logik.js` und ein Test in `pruefe_spiel.js` schlagen
+  schon vorher fehl (veraltete Annahmen zur Anmeldung und zu `fragen`).
+

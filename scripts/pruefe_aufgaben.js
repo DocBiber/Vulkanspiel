@@ -276,16 +276,19 @@ var zeilen = csv.trim().split(/\r\n/);
 pruefe('CSV hat neun Spalten', zeilen[0].split(';').length === 9, zeilen[0]);
 pruefe('CSV nennt die neuen Spalten',
   zeilen[0].indexOf('Aufgaben geloest') !== -1 && zeilen[0].indexOf('Freitext bewertet') !== -1);
-pruefe('CSV: Alpha hat fuenf von siebzehn Aufgaben',
-  zeilen.some(z => z.indexOf('Alpha;Vulkanforscherin;') === 0 && z.indexOf(';5 von 17;') !== -1),
+pruefe('CSV: Alpha hat fuenf von fuenfundzwanzig Aufgaben',
+  zeilen.some(z => z.indexOf('Alpha;Vulkanforscherin;') === 0 && z.indexOf(';5 von 25;') !== -1),
   zeilen.join(' | '));
 pruefe('Tagebuch-Export zeigt die Bewertung',
   V.exportTagebuch().indexOf('bewertet: 6') !== -1);
 
-console.log('\n[14] Aeltere Stationen laufen weiter');
+console.log('\n[14] Weitere Stationen');
 var hot = V.aufgabenVon('hotspot');
-pruefe('Hotspot liefert zwei Aufgaben aus den alten Daten',
-  hot.length === 3, String(hot.length));
+pruefe('Hotspot liefert fuenf Aufgaben',
+  hot.length === 5, String(hot.length));
+pruefe('Jede Station hat fuenf Aufgaben in der Reihenfolge der Typen',
+  V.REGIONEN.every(r => V.aufgabenVon(r.id).map(a => a.typ).join() ===
+    'mc,zuordnung,richtig_falsch,lueckentext,freitext'));
 pruefe('Erste Aufgabe des Hotspots ist Multiple Choice',
   hot[0].typ === 'mc', hot[0].typ);
 pruefe('Letzte Aufgabe des Hotspots ist Freitext',

@@ -76,7 +76,8 @@ sie der Reihe nach durch; eine halb richtige Lösung bringt Teilpunkte.
 | Freitext-Aufgabe bewertet | 10 |
 | Schloss geöffnet | 10 |
 
-Pro Station sind 30 bis 40 Punkte möglich. Höchstpunktzahl ≈ 190. Der Fortschritt
+Jede Station bringt 40 Punkte (8 + 8 + 6 + 8 + 10). Dazu kommen 10 Startpunkte und
+10 für das Schloss, die Höchstpunktzahl liegt damit bei 220. Der Fortschritt
 zeigt Stationen, gelöste Aufgaben und Symbole an.
 
 ## Der Ablauf in einer Station
