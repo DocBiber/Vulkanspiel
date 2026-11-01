@@ -173,12 +173,8 @@ pruefe('Spiel nutzt die Kartenstueck-IDs aus den Daten',
       JSON.stringify(aktiveStationen.map(st => st.svg)));
 pruefe('stationenDaten() liefert die Rohdaten',
       V.stationenDaten() && V.stationenDaten().stationen.length === 5);
-pruefe('index.html bindet stationen.js vor spiel.js ein',
-      (() => {
-        const i = html.indexOf('src="assets/stationen.js"');
-        const j = html.indexOf('src="assets/spiel.js"');
-        return i !== -1 && j !== -1 && i < j;
-      })());
+pruefe('index.html laedt die alten Skripte stationen.js und spiel.js nicht mehr (Altbestand)',
+      html.indexOf('src="assets/stationen.js"') === -1 && html.indexOf('src="assets/spiel.js"') === -1);
 pruefe('Jede Station hat ein Kartenstueck',
       stationenJson.stationen.every(s => stationenJson.kartenstuecke.some(k => k.id === s.kartenstueck)));
 pruefe('Jedes Kartenstueck hat Farbe und Hinweis',

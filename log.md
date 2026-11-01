@@ -663,6 +663,16 @@ Offen:
 - **Klarstellung**: `anleitung-gemini-spiel.md` ist im Repository versioniert
   und passt zum Code (Cloud-Run-Variante); keine Änderung nötig.
 - Weiterhin offen: Cloud-Run-Deployment ungetestet, Schlüssel von Hand in
-  `backend/.env`. `pruefe_logik.js` und ein Test in `pruefe_spiel.js` schlagen
-  schon vorher fehl (veraltete Annahmen zur Anmeldung und zu `fragen`).
+  `backend/.env`.
+
+## [2026-11-01] update | Skizzen geprüft, alte Tests repariert
+
+- Die vier neuen Skizzen mit ihren Feldern A bis D im Browser angesehen
+  (lokaler Server, Galerie aller Zuordnungsaufgaben). Lage und Lesbarkeit passen.
+- `scripts/pruefe_logik.js`: Anmeldung mit Aufdruck, Aufgaben statt alter
+  Fragen, Harness lädt `aufgaben.js`. 47 bestanden.
+- `scripts/pruefe_spiel.js` (Altbestand): Prüfung zur Einbindung von
+  `stationen.js` und `spiel.js` auf „wird nicht mehr geladen" umgestellt.
+  60 bestanden.
+- Alle vier Testläufe sind grün (47, 60, 89, 118).
 
