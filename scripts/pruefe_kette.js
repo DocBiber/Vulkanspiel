@@ -173,7 +173,7 @@ pruefe('Schloss zu Beginn geschlossen', alpha().schlossAuf === false);
 
 const vorher = alpha().punkte;
 pruefe('Frage in verschlossener Region abgelehnt',
-      V.frageBeantworten(V.REGIONEN[1].id, V.REGIONEN[1].fragen[0].id, V.REGIONEN[1].fragen[0].richtig).ok === false);
+      V.frageBeantworten(V.REGIONEN[1].id, V.aufgabenVon(V.REGIONEN[1].id)[0].id, V.aufgabenVon(V.REGIONEN[1].id)[0].daten.richtig).ok === false);
 pruefe('Keine Punkte durch verschlossene Region', alpha().punkte === vorher);
 pruefe('Falscher Code oeffnet nichts',
       V.codeEinloesen(V.REGIONEN[1].id, 'FALSCH').ok === false &&
@@ -246,8 +246,8 @@ pruefe('Fortschritt 5 von 5', V.fortschritt(alpha()) === 5, String(V.fortschritt
 pruefe('Symbole in der richtigen Reihenfolge',
       JSON.stringify(V.symbole(alpha()).map(s => s.symbol)) === JSON.stringify(erwarteteSymbole),
       JSON.stringify(V.symbole(alpha()).map(s => s.symbol)));
-pruefe('Punkte nach allen Aufgaben: 10 Start + 30 Station 1 + 80 Stationen 2-5 = 120',
-      alpha().punkte === 120, String(alpha().punkte));
+pruefe('Punkte nach allen Aufgaben: 10 Start + 5 Stationen x 30 Punkte (ohne Freitext) = 160',
+      alpha().punkte === 160, String(alpha().punkte));
 
 console.log('\n[6] Schloss');
 pruefe('Schloss ist bereit', V.schlossBereit(alpha()) === true);
@@ -255,7 +255,7 @@ pruefe('Schloss-Code steht in den Daten', typeof SCHLOSS_CODE === 'string' && SC
 const schloss = V.schlossOeffnen();
 pruefe('Schloss oeffnen klappt', schloss.ok === true, JSON.stringify(schloss));
 pruefe('Bonus wurde gutgeschrieben', schloss.bonus === inhalte.schloss.bonuspunkte, String(schloss.bonus));
-pruefe('Punkte jetzt 130', alpha().punkte === 130, String(alpha().punkte));
+pruefe('Punkte jetzt 170', alpha().punkte === 170, String(alpha().punkte));
 pruefe('Abschluss-Code wird geliefert', schloss.code === SCHLOSS_CODE);
 pruefe('Zweites Oeffnen abgelehnt', V.schlossOeffnen().ok === false);
 
@@ -290,8 +290,8 @@ const zeilen = csv.trim().split(/\r\n/);
 pruefe('CSV hat neun Spalten', zeilen[0].split(';').length === 9, zeilen[0]);
 pruefe('CSV listet Symbole und Schloss',
       zeilen[0].indexOf('Symbole') !== -1 && zeilen[0].indexOf('Schloss geoeffnet') !== -1);
-pruefe('CSV: Alpha hat 17 Aufgaben geloest und das Schloss offen',
-      zeilen.some(z => z.indexOf('Alpha;Vulkanforscherin;130;5;17 von 17;5;0;5;ja') === 0),
+pruefe('CSV: Alpha hat 25 Aufgaben geloest und das Schloss offen',
+      zeilen.some(z => z.indexOf('Alpha;Vulkanforscherin;170;5;25 von 25;5;0;5;ja') === 0),
       zeilen.join(' | '));
 
 console.log('\n[9] Freitext');
@@ -303,7 +303,7 @@ pruefe('Freitext-Antwort gibt noch keine Punkte', alpha().punkte === vorherFreit
       String(alpha().punkte));
 const bewertung = V.freitextBewerten('hotspot', freiId, 5, 'Kriterien erfuellt.');
 pruefe('Bewertung gibt Punkte', bewertung.ok === true && bewertung.punkte === 5);
-pruefe('Punkte jetzt 135', alpha().punkte === 135, String(alpha().punkte));
+pruefe('Punkte jetzt 175', alpha().punkte === 175, String(alpha().punkte));
 pruefe('Zu kurze Antwort abgelehnt',
       V.freitextSpeichern('hotspot', freiId, 'kurz').ok === false);
 pruefe('Tagebuch-Text enthaelt die Antwort', V.exportTagebuch().indexOf('Maske') !== -1);
@@ -315,12 +315,12 @@ var batch = V.freitextBatch([
 ]);
 pruefe('Batch traegt die Bewertung ein', batch.ok === true && batch.eingetragen === 1,
   JSON.stringify(batch));
-pruefe('Punkte jetzt 144', alpha().punkte === 144, String(alpha().punkte));
+pruefe('Punkte jetzt 184', alpha().punkte === 184, String(alpha().punkte));
 var batchZwei = V.freitextBatch([
   { gruppe: 'Alpha', regionId: 'subduktion', aufgabeId: 'sub-5', punkte: 6, hinweis: 'Nachkorrektur.' }
 ]);
 pruefe('Erneute Batch-Bewertung ersetzt die Punkte',
-  V.gruppen().find(function (g) { return g.name === 'Alpha'; }).punkte === 141,
+  V.gruppen().find(function (g) { return g.name === 'Alpha'; }).punkte === 181,
   String(V.gruppen().find(function (g) { return g.name === 'Alpha'; }).punkte));
 var batchFalsch = V.freitextBatch([
   { gruppe: 'Gibt es nicht', regionId: 'subduktion', aufgabeId: 'sub-5', punkte: 5 }
